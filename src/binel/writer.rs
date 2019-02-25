@@ -1,4 +1,5 @@
 use std::io::prelude::*;
+use super::BinFile;
 
 /// Write a string using a varint for the length.
 ///
@@ -19,6 +20,17 @@ pub fn put_string<W: Write>(writer: &mut W, string: &str) -> std::io::Result<()>
     writer.write_all(length)?;
 
     writer.write_all(string.as_bytes())?;
+
+    Ok(())
+}
+
+/// Write a BinFile. Tested solely in integration tests due to complexity.
+pub fn put_file<W: Write>(mut writer: &mut W, bin: BinFile) -> std::io::Result<()> {
+    put_string(&mut writer, "CELESTE MAP")?;
+
+    put_string(&mut writer, bin.package)?;
+
+    writer.write_all(bin.rest)?;
 
     Ok(())
 }
