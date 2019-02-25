@@ -1,6 +1,6 @@
 [package]
 name = "celeste"
-version = "0.0.2"
+version = "0.0.3"
 authors = ["leo60228 <iakornfeld@gmail.com>"]
 edition = "2018"
 description = "Crate for formats from the 2018 game Celeste."
@@ -10,3 +10,4 @@ repository = "https://github.com/leo60228/celesters"
 
 [dependencies]
 nom = "^4.1"
+nom-varint = "0.1.0"
