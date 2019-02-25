@@ -1,10 +1,12 @@
 [package]
 name = "celeste"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["leo60228 <iakornfeld@gmail.com>"]
 edition = "2018"
 description = "Crate for formats from the 2018 game Celeste."
 license = "MIT OR Apache-2.0"
+homepage = "https://github.com/leo60228/celesters"
+repository = "https://github.com/leo60228/celesters"
 
 [dependencies]
 nom = "^4.1"
