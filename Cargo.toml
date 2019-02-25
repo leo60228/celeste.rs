@@ -1,6 +1,6 @@
 [package]
 name = "celeste"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["leo60228 <iakornfeld@gmail.com>"]
 edition = "2018"
 description = "Crate for formats from the 2018 game Celeste."
