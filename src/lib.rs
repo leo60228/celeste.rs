@@ -3,7 +3,11 @@
 
 #[macro_use]
 extern crate nom;
+#[macro_use]
+extern crate lazy_static;
 extern crate unsigned_varint;
+#[macro_use]
+extern crate log;
 
-/// `binel` handles parsing Celeste's BinaryElement format, which is used for map files.
+/// `binel` handles parsing Celeste's `BinaryElement` format, which is used for map files.
 pub mod binel;

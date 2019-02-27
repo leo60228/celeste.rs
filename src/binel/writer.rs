@@ -24,13 +24,14 @@ pub fn put_string(writer: &mut dyn Write, string: &str) -> std::io::Result<()> {
     Ok(())
 }
 
-/// Write a BinFile. Tested solely in integration tests due to complexity.
-pub fn put_file(mut writer: &mut dyn Write, bin: BinFile) -> std::io::Result<()> {
+/// Write a `BinFile`. Tested solely in integration tests due to complexity.
+pub fn put_file(mut writer: &mut dyn Write, bin: &BinFile) -> std::io::Result<()> {
     put_string(&mut writer, "CELESTE MAP")?;
 
-    put_string(&mut writer, bin.package)?;
+    put_string(&mut writer, &bin.package)?;
 
-    writer.write_all(bin.rest)?;
+    //writer.write_all(bin.rest)?;
+    // TODO: put_element
 
     Ok(())
 }
