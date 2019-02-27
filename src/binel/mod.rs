@@ -3,7 +3,7 @@ use std::collections::HashMap;
 /// `parser` parses `BinaryElement` files.
 pub mod parser;
 
-/// `writer` writers `BinaryElement` files.
+/// `writer` writes `BinaryElement` files.
 pub mod writer;
 
 /// Holds `BinaryElement` files.
