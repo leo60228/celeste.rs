@@ -26,6 +26,7 @@ pub fn put_string(writer: &mut dyn Write, string: &str) -> std::io::Result<()> {
     Ok(())
 }
 
+/// Write a bool, tagged with 0x00.
 pub fn put_tagged_bool(writer: &mut dyn Write, val: bool) -> std::io::Result<()> {
     writer.write_u8(0x00)?;
     writer.write_u8(val as u8)?;
@@ -33,6 +34,7 @@ pub fn put_tagged_bool(writer: &mut dyn Write, val: bool) -> std::io::Result<()>
     Ok(())
 }
 
+/// Write an i32 as either a u8 (tagged with 0x01), i16 (tagged with 0x02), or i32 (tagged with 0x03).
 pub fn put_tagged_int(writer: &mut dyn Write, val: i32) -> std::io::Result<()> {
     if val >= u8::min_value().into() && val <= u8::max_value().into() {
         writer.write_u8(0x01)?;
@@ -48,6 +50,7 @@ pub fn put_tagged_int(writer: &mut dyn Write, val: i32) -> std::io::Result<()> {
     Ok(())
 }
 
+/// Write an f32, tagged with 0x04.
 pub fn put_tagged_f32(writer: &mut dyn Write, val: f32) -> std::io::Result<()> {
     writer.write_u8(0x04)?;
     writer.write_f32::<LittleEndian>(val)?;
@@ -55,10 +58,12 @@ pub fn put_tagged_f32(writer: &mut dyn Write, val: f32) -> std::io::Result<()> {
     Ok(())
 }
 
+/// Encode a string in Celeste's RLE format. Allocates two bytes on the heap due to a current limitation of iterators.
 pub fn encode_rle_string(string: &str) -> Vec<u8> {
     string.bytes().group_by(|e| *e).into_iter().flat_map(|(ch, run)| vec![run.count() as u8, ch]).collect() // rust#25725
 }
 
+/// Write a string either using a lookup (stored as u16, tagged with 0x05), Celeste's RLE format (tagged with 0x07), or using a varint (tagged with 0x06).
 pub fn put_tagged_str(mut writer: &mut dyn Write, lookup: &[String], val: &str) -> std::io::Result<()> {
     if let Some(index) = lookup.iter().position(|e| *e == val) {
         writer.write_u8(0x05)?;
@@ -79,6 +84,7 @@ pub fn put_tagged_str(mut writer: &mut dyn Write, lookup: &[String], val: &str) 
     Ok(())
 }
 
+/// Write a BinEl using an existing lookup table for element and attribute named.
 pub fn put_element(mut writer: &mut dyn Write, lookup: &[String], elem: &BinEl) -> std::io::Result<()> {
     let name_index = match lookup.iter().position(|e| *e == elem.name) {
         Some(p) => p,
@@ -127,6 +133,7 @@ fn gen_lookup_keys(binel: &BinEl, mut seen: &mut HashMap<String, usize>) {
     }
 }
 
+/// Generate a string lookup using the attributes and element names in a BinEl.
 pub fn gen_lookup(binel: &BinEl) -> Vec<String> {
     let mut seen = HashMap::new();
     gen_lookup_keys(binel, &mut seen);

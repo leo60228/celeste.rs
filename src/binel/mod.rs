@@ -27,9 +27,9 @@ pub enum BinElAttr {
 pub struct BinEl {
     /// The name of the `BinEl`.
     pub name: String,
-    children: HashMap<String, Vec<BinEl>>,
     /// All attributes of the `BinEl`. Unlike XML, these are strongly typed.
-    pub attributes: HashMap<String, BinElAttr>
+    pub attributes: HashMap<String, BinElAttr>,
+    children: HashMap<String, Vec<BinEl>>
 }
 
 lazy_static! {
@@ -92,21 +92,13 @@ impl BinEl {
     /// Get children of the `BinEl` by name.
     #[inline]
     pub fn get(&self, name: &str) -> &Vec<Self> {
-        if !self.children.contains_key(name) {
-          return &CHILDLESS_BINEL_VEC;
-        }
-
-        self.children.get(name).expect("should always exist")
+        self.children.get(name).unwrap_or(&CHILDLESS_BINEL_VEC)
     }
 
     /// Get mutable children of the `BinEl` by name.
     #[inline]
     pub fn get_mut(&mut self, name: &str) -> &mut Vec<Self> {
-        if !self.children.contains_key(name) {
-            self.children.insert(name.to_string(), vec![]);
-        }
-
-        self.children.get_mut(name).expect("should always exist")
+        self.children.entry(name.to_string()).or_insert(vec![])
     }
 }
 
