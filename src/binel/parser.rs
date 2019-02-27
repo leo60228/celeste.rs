@@ -20,7 +20,7 @@ pub fn take_string(input: &[u8]) -> IResult<&[u8], String> {
     )
 }
 
-/// Lookup a 1-indexed u16 from a `&[u8]` in a string lookup table.
+/// Lookup a u16 from a `&[u8]` in a string lookup table.
 pub fn take_lookup<'a, 'b>(buf: &'a [u8], lookup: &'b[String]) -> IResult<&'a [u8], &'b String> {
     let (buf, index) = le_u16(buf)?;
     Ok((buf, &lookup[index as usize]))
