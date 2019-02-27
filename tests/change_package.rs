@@ -14,7 +14,6 @@ fn change_package() {
     map_bin.package = "newpkg".to_string();
     let mut changed_buf = Cursor::new(vec![0; 512]);
     binel::writer::put_file(&mut changed_buf, &map_bin).unwrap();
-    std::io::Write::write_all(&mut std::fs::File::create("newpkg.bin").unwrap(), &changed_buf.get_ref()[..]).unwrap();
     let changed_bin = binel::parser::take_file(&changed_buf.get_ref()[..]).unwrap().1;
     assert_eq!(changed_bin.package, "newpkg");
 }

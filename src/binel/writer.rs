@@ -68,6 +68,7 @@ pub fn put_tagged_str(mut writer: &mut dyn Write, lookup: &[String], val: &str) 
 
         if rle.len() < val.len() && rle.len() <= i16::max_value() as usize {
             writer.write_u8(0x07)?;
+            writer.write_i16::<LittleEndian>(rle.len() as i16)?;
             writer.write_all(&rle)?;
         } else {
             writer.write_u8(0x06)?;
