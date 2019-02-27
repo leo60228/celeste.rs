@@ -8,6 +8,8 @@ extern crate lazy_static;
 extern crate unsigned_varint;
 #[macro_use]
 extern crate log;
+extern crate byteorder;
+extern crate itertools;
 
 /// `binel` handles parsing Celeste's `BinaryElement` format, which is used for map files.
 pub mod binel;

@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use nom::lib::std::collections::hash_map::{Values, ValuesMut};
 
 /// `parser` parses `BinaryElement` files.
 pub mod parser;
@@ -80,14 +79,14 @@ impl BinEl {
 
     /// Get all children of the `BinEl`.
     #[inline]
-    pub fn children(&self) -> Values<String, Vec<Self>> {
-        self.children.values()
+    pub fn children<'a>(&'a self) -> impl Iterator<Item=&BinEl> + 'a {
+        self.children.values().flatten()
     }
 
     /// Get all children of the `BinEl`, mutable.
     #[inline]
-    pub fn children_mut(&mut self) -> ValuesMut<String, Vec<Self>> {
-        self.children.values_mut()
+    pub fn children_mut<'a>(&'a mut self) -> impl Iterator<Item=&mut BinEl> + 'a {
+        self.children.values_mut().flatten()
     }
 
     /// Get children of the `BinEl` by name.
