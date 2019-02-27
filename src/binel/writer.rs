@@ -84,7 +84,7 @@ pub fn put_tagged_str(mut writer: &mut dyn Write, lookup: &[String], val: &str) 
     Ok(())
 }
 
-/// Write a BinEl using an existing lookup table for element and attribute named.
+/// Write a `BinEl` using an existing lookup table for element and attribute named.
 pub fn put_element(mut writer: &mut dyn Write, lookup: &[String], elem: &BinEl) -> std::io::Result<()> {
     let name_index = match lookup.iter().position(|e| *e == elem.name) {
         Some(p) => p,
@@ -133,7 +133,7 @@ fn gen_lookup_keys(binel: &BinEl, mut seen: &mut HashMap<String, usize>) {
     }
 }
 
-/// Generate a string lookup using the attributes and element names in a BinEl.
+/// Generate a string lookup using the attributes and element names in a `BinEl`.
 pub fn gen_lookup(binel: &BinEl) -> Vec<String> {
     let mut seen = HashMap::new();
     gen_lookup_keys(binel, &mut seen);

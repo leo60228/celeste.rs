@@ -1,5 +1,5 @@
 //! # `celeste`
-//! `celeste` is a Rust crate for files used in the 2018 video game Celeste. It currently has a fully-functional writer and parser for BinaryElement files, which are used to store the game's levels.
+//! `celeste` is a Rust crate for files used in the 2018 video game Celeste. It currently has a fully-functional writer and parser for `BinaryElement` files, which are used to store the game's levels.
 
 #[macro_use]
 extern crate nom;

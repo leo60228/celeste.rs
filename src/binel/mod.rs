@@ -79,13 +79,13 @@ impl BinEl {
 
     /// Get all children of the `BinEl`.
     #[inline]
-    pub fn children<'a>(&'a self) -> impl Iterator<Item=&BinEl> + 'a {
+    pub fn children<'a>(&'a self) -> impl Iterator<Item=&Self> + 'a {
         self.children.values().flatten()
     }
 
     /// Get all children of the `BinEl`, mutable.
     #[inline]
-    pub fn children_mut<'a>(&'a mut self) -> impl Iterator<Item=&mut BinEl> + 'a {
+    pub fn children_mut<'a>(&'a mut self) -> impl Iterator<Item=&mut Self> + 'a {
         self.children.values_mut().flatten()
     }
 
@@ -98,7 +98,7 @@ impl BinEl {
     /// Get mutable children of the `BinEl` by name.
     #[inline]
     pub fn get_mut(&mut self, name: &str) -> &mut Vec<Self> {
-        self.children.entry(name.to_string()).or_insert(vec![])
+        self.children.entry(name.to_string()).or_insert_with(|| vec![])
     }
 }
 
