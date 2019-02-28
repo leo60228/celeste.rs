@@ -15,6 +15,14 @@ struct Recursive {
     string_field: String
 }
 
+#[derive(BinElType)]
+#[celeste_name = "new/name"]
+struct Renamed {
+    #[celeste_name = "changed.field"]
+    orig_name: u8,
+    kept_name: f32
+}
+
 #[test]
 fn create_empty() {
     let binel = match (EmptyMixedCase {}).as_binel() {
@@ -43,6 +51,31 @@ fn create_attr() {
     match binel.attributes.get("numberField").unwrap() {
         BinElAttr::Int(num) => assert_eq!(*num, number_field as i32),
         _ => panic!("Didn't get int!")
+    }
+}
+
+#[test]
+fn create_renamed() {
+    let int_field: u8 = 255;
+    let float_field: f32 = 4.01;
+
+    let binel = match (Renamed {orig_name: int_field, kept_name: float_field}).as_binel() {
+        BinElValue::Element(elem) => elem,
+        _ => panic!("Didn't get element!")
+    };
+
+    assert_eq!(binel.name, "new/name");
+    assert_eq!(binel.children().count(), 0);
+    assert_eq!(binel.attributes.len(), 2);
+
+    match binel.attributes.get("changed.field").expect("orig_name wasn't renamed!") {
+        BinElAttr::Int(num) => assert_eq!(*num, int_field as i32),
+        _ => panic!("Didn't get int!")
+    }
+
+    match binel.attributes.get("keptName").unwrap() {
+        BinElAttr::Float(num) => assert_eq!(*num, float_field),
+        _ => panic!("Didn't get float!")
     }
 }
 
