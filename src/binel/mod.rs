@@ -7,6 +7,9 @@ pub mod parser;
 /// `writer` writes `BinaryElement` files.
 pub mod writer;
 
+/// `serialize` serializes and deserializes `BinEl`s.
+pub mod serialize;
+
 /// Holds `BinaryElement` files.
 #[derive(Debug)]
 pub struct BinFile {
