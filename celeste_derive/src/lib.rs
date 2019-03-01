@@ -37,7 +37,8 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         }
     }
 
-    let d_check_name = name.clone();
+    let check_name = name.clone();
+    let name_call = name.clone();
 
     let body = match input.data {
         Data::Struct(body) => body,
@@ -150,12 +151,17 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let d_idents_continue = s_fields.iter();
     let d_idents_attr = s_fields.iter();
     let d_idents_plain = s_fields.iter();
+    let d_idents_none = s_fields.iter();
     let d_idents_some = s_fields.iter();
     let d_names = s_names.iter();
     let d_types_attr = d_types.iter();
+    let d_types_maybe_attr = d_types.iter();
+    let d_types_maybe_elem = d_types.iter();
+    let d_types_name = d_types.iter();
     let d_types = d_types.iter();
     let d_vec_idents = s_vec_fields.iter();
     let d_vec_idents_push = s_vec_fields.iter();
+    let d_vec_types_name = d_vec_types_inner.iter();
     let d_vec_types_inner = d_vec_types_inner.iter();
     let d_idents = s_idents.iter().chain(s_vec_idents.iter());
     let d_fields = s_fields.iter().chain(s_vec_fields.iter());
@@ -174,15 +180,19 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                     _ => return None
                 };
 
-                if binel.name != #d_check_name {
+                if binel.name != #check_name {
                     return None;
                 }
 
                 #(
-                    let mut #d_idents_attr = match binel.attributes.remove(#d_names) {
-                        Some(attr) => <#d_types_attr as serialize::BinElType>::from_binel(serialize::BinElValue::Attribute(attr)),
-                        None => None
-                    };
+                    let mut #d_idents_none = None;
+
+                    if <#d_types_maybe_attr as serialize::BinElType>::maybe_attr() {
+                        #d_idents_attr = match binel.attributes.remove(#d_names) {
+                            Some(attr) => <#d_types_attr as serialize::BinElType>::from_binel(serialize::BinElValue::Attribute(attr)),
+                            None => None
+                        };
+                    }
                 )*
 
                 #(
@@ -191,26 +201,31 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
                 for child in binel.drain() {
                     #(
-                        let maybe = <#d_types as serialize::BinElType>
-                            ::from_binel(serialize::BinElValue::Element(child.clone()));
+                        if <#d_types_maybe_elem as serialize::BinElType>::maybe_elem() &&
+                           <#d_types_name as serialize::BinElType>::elem_name().map_or(true, |name| name == child.name) {
+                            let maybe = <#d_types as serialize::BinElType>
+                                ::from_binel(serialize::BinElValue::Element(child.clone()));
 
-                        #d_idents_checked = match (#d_idents_check, maybe) {
-                            (Some(_), Some(_)) => return None,
-                            (Some(attr), None) => Some(attr),
-                            (None, Some(child)) => Some(child),
-                            (None, None) => None
-                        };
+                            #d_idents_checked = match (#d_idents_check, maybe) {
+                                (Some(_), Some(_)) => return None,
+                                (Some(attr), None) => Some(attr),
+                                (None, Some(child)) => Some(child),
+                                (None, None) => None
+                            };
 
-                        if #d_idents_continue.is_some() {
-                            continue;
+                            if #d_idents_continue.is_some() {
+                                continue;
+                            }
                         }
                     )*
                     #(
-                        let maybe = <#d_vec_types_inner as serialize::BinElType>
-                            ::from_binel(serialize::BinElValue::Element(child.clone()));
-                        
-                        if let Some(elem) = maybe {
-                            #d_vec_idents_push.push(elem);
+                        if <#d_vec_types_name as serialize::BinElType>::elem_name().map_or(true, |name| name == child.name) {
+                            let maybe = <#d_vec_types_inner as serialize::BinElType>
+                                ::from_binel(serialize::BinElValue::Element(child.clone()));
+                            
+                            if let Some(elem) = maybe {
+                                #d_vec_idents_push.push(elem);
+                            }
                         }
                     )*
                 }
@@ -253,6 +268,9 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
                 serialize::BinElValue::Element(binel)
             }
+
+            fn maybe_attr() -> bool { false }
+            fn elem_name() -> Option<&'static str> { Some(#name_call) }
         }
     };
 

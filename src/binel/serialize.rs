@@ -11,6 +11,9 @@ pub enum BinElValue {
 pub trait BinElType: Sized {
     fn into_binel(self) -> BinElValue;
     fn from_binel(binel: BinElValue) -> Option<Self>;
+    fn maybe_attr() -> bool { true }
+    fn maybe_elem() -> bool { true }
+    fn elem_name() -> Option<&'static str> { None }
 }
 
 macro_rules! impl_primitive {
@@ -26,6 +29,8 @@ macro_rules! impl_primitive {
                     _ => None
                 }
             }
+
+            fn maybe_elem() -> bool { false }
         }
     )
 }
@@ -50,6 +55,8 @@ impl BinElType for BinEl {
             _ => None
         }
     }
+
+    fn maybe_attr() -> bool { false }
 }
 
 impl BinElType for BinElAttr {
@@ -63,4 +70,6 @@ impl BinElType for BinElAttr {
             _ => None
         }
     }
+
+    fn maybe_elem() -> bool { false }
 }
