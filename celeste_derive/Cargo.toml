@@ -3,6 +3,10 @@ name = "celeste_derive"
 version = "0.1.0"
 authors = ["leo60228 <iakornfeld@gmail.com>"]
 edition = "2018"
+description = "Helper crate for `celeste`. Should not be used directly; starting in Rust 2018, you can just use `celeste` instead."
+license = "MIT OR Apache-2.0"
+homepage = "https://github.com/leo60228/celesters"
+repository = "https://github.com/leo60228/celesters"
 
 [lib]
 proc-macro = true
