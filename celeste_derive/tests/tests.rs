@@ -4,7 +4,7 @@ use celeste::binel::{serialize::*, *};
 #[derive(BinElType)]
 struct EmptyMixedCase {}
 
-#[derive(BinElType)]
+#[derive(BinElType, Clone)]
 struct OneField {
     number_field: i16
 }
@@ -23,9 +23,16 @@ struct Renamed {
     kept_name: f32
 }
 
+#[derive(BinElType)]
+struct MultipleChildren {
+    #[celeste_child_vec]
+    children: Vec<OneField>,
+    child: EmptyMixedCase
+}
+
 #[test]
 fn create_empty() {
-    let binel = match (EmptyMixedCase {}).as_binel() {
+    let binel = match (EmptyMixedCase {}).into_binel() {
         BinElValue::Element(elem) => elem,
         _ => panic!("Didn't get element!")
     };
@@ -39,7 +46,7 @@ fn create_empty() {
 fn create_attr() {
     let number_field = -4;
 
-    let binel = match (OneField {number_field}).as_binel() {
+    let binel = match (OneField {number_field}).into_binel() {
         BinElValue::Element(elem) => elem,
         _ => panic!("Didn't get element!")
     };
@@ -59,7 +66,7 @@ fn create_renamed() {
     let int_field: u8 = 255;
     let float_field: f32 = 4.01;
 
-    let binel = match (Renamed {orig_name: int_field, kept_name: float_field}).as_binel() {
+    let binel = match (Renamed {orig_name: int_field, kept_name: float_field}).into_binel() {
         BinElValue::Element(elem) => elem,
         _ => panic!("Didn't get element!")
     };
@@ -87,7 +94,7 @@ fn create_recursive() {
     let elem_field = OneField {number_field};
     let rec = Recursive {elem_field, string_field: string_field.to_string()};
 
-    let binel = match rec.as_binel() {
+    let binel = match rec.into_binel() {
         BinElValue::Element(elem) => elem,
         _ => panic!("Didn't get element!")
     };
@@ -110,5 +117,31 @@ fn create_recursive() {
     match child.attributes.get("numberField").unwrap() {
         BinElAttr::Int(num) => assert_eq!(*num, number_field as i32),
         _ => panic!("Didn't get int!")
+    }
+}
+
+#[test]
+fn create_child_vec() {
+    let one_field = OneField { number_field: 5 };
+    let vec = vec![one_field.clone(), one_field.clone(), one_field];
+
+    let obj = MultipleChildren { children: vec, child: EmptyMixedCase {} };
+
+    let binel = match obj.into_binel() {
+        BinElValue::Element(elem) => elem,
+        _ => panic!("Didn't get element!")
+    };
+
+    assert_eq!(binel.children().count(), 4);
+    assert_eq!(binel.get("oneField").len(), 3);
+    assert_eq!(binel.get("emptyMixedCase").len(), 1);
+
+    for e in binel.get("oneField") {
+        assert_eq!(e.children().count(), 0);
+        assert_eq!(e.attributes.len(), 1);
+        match e.attributes.get("numberField").unwrap() {
+            BinElAttr::Int(num) => assert_eq!(*num, 5),
+            _ => panic!("Didn't get int!")
+        }
     }
 }

@@ -9,14 +9,14 @@ pub enum BinElValue {
 }
 
 pub trait BinElType: Sized {
-    fn as_binel(self) -> BinElValue;
+    fn into_binel(self) -> BinElValue;
     fn from_binel(binel: BinElValue) -> Option<Self>;
 }
 
 macro_rules! impl_primitive {
     ($attr:ident, $type:ty, $val:ty) => (
         impl BinElType for $type {
-            fn as_binel(self) -> BinElValue {
+            fn into_binel(self) -> BinElValue {
                 BinElValue::Attribute(BinElAttr::$attr(self as $val))
             }
     
@@ -40,7 +40,7 @@ impl_primitive!(Float, f32, f32);
 impl_primitive!(Text, String, String);
 
 impl BinElType for BinEl {
-    fn as_binel(self) -> BinElValue {
+    fn into_binel(self) -> BinElValue {
         BinElValue::Element(self)
     }
 
@@ -53,7 +53,7 @@ impl BinElType for BinEl {
 }
 
 impl BinElType for BinElAttr {
-    fn as_binel(self) -> BinElValue {
+    fn into_binel(self) -> BinElValue {
         BinElValue::Attribute(self)
     }
 

@@ -6,7 +6,7 @@ use quote::quote;
 use syn::*;
 use heck::MixedCase;
 
-#[proc_macro_derive(BinElType, attributes(celeste_multiple_children, celeste_name))]
+#[proc_macro_derive(BinElType, attributes(celeste_child_vec, celeste_name))]
 pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
@@ -18,11 +18,11 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         match attr.parse_meta() {
             Ok(Meta::Word(word)) => {
                 assert_ne!(word.to_string(), "celeste_name", "celeste_name must have a value!");
-                assert_ne!(word.to_string(), "celeste_multiple_children", "celeste_multiple_children is only valid on fields!");
+                assert_ne!(word.to_string(), "celeste_child_vec", "celeste_child_vec is only valid on fields!");
             },
             Ok(Meta::List(list)) => {
                 assert_ne!(list.ident.to_string(), "celeste_name", "celeste_name must have a value!");
-                assert_ne!(list.ident.to_string(), "celeste_multiple_children", "celeste_multiple_children is only valid on fields!");
+                assert_ne!(list.ident.to_string(), "celeste_child_vec", "celeste_child_vec is only valid on fields!");
             },
             Ok(Meta::NameValue(kv)) => {
                 if kv.ident.to_string() == "celeste_name" {
@@ -31,7 +31,7 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                         _ => panic!("celeste_name must be a string!")
                     };
                 }
-                assert_ne!(kv.ident.to_string(), "celeste_multiple_children", "celeste_multiple_children is only valid on fields!");
+                assert_ne!(kv.ident.to_string(), "celeste_child_vec", "celeste_child_vec is only valid on fields!");
             },
             _ => {}
         }
@@ -45,11 +45,10 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let mut idents = Vec::new();
     let mut names = Vec::new();
 
-    let mut iter_idents = Vec::new();
-    let mut iter_names = Vec::new();
+    let mut vec_idents = Vec::new();
 
     for ref field in body.fields.iter() {
-        let mut is_iter = false;
+        let mut is_vec = false;
         let ident = match &field.ident {
             &Some(ref ident) => ident.clone(),
             &None => panic!("Your struct is missing a field identity!"),
@@ -58,14 +57,14 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         for ref attr in field.attrs.iter() {
             match attr.parse_meta() {
                 Ok(Meta::Word(word)) => {
-                    if word.to_string() == "celeste_multiple_children" {
-                        is_iter = true;
+                    if word.to_string() == "celeste_child_vec" {
+                        is_vec = true;
                     }
                     assert_ne!(word.to_string(), "celeste_name", "celeste_name must have a value!");
                 },
                 Ok(Meta::List(list)) => {
                     assert_ne!(list.ident.to_string(), "celeste_name", "celeste_name must have a value!");
-                    assert_ne!(list.ident.to_string(), "celeste_multiple_children", "celeste_multiple_children has no arguments!");
+                    assert_ne!(list.ident.to_string(), "celeste_child_vec", "celeste_child_vec has no arguments!");
                 },
                 Ok(Meta::NameValue(kv)) => {
                     if kv.ident.to_string() == "celeste_name" {
@@ -74,25 +73,23 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                             _ => panic!("celeste_name must be a string!")
                         };
                     }
-                    assert_ne!(kv.ident.to_string(), "celeste_multiple_children", "celeste_multiple_children has no arguments!");
+                    assert_ne!(kv.ident.to_string(), "celeste_child_vec", "celeste_child_vec has no arguments!");
                 },
                 _ => {}
             }
         }
-        if !is_iter {
+        if !is_vec {
             idents.push(ident);
             names.push(name);
         } else {
-            iter_idents.push(ident);
-            iter_names.push(name);
+            vec_idents.push(ident);
         }
     }
 
     // disable mutability
     let idents = idents;
     let names = names;
-    let iter_idents = iter_idents;
-    let iter_names = iter_names;
+    let vec_idents = vec_idents;
 
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
@@ -104,13 +101,13 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 None
             }
 
-            fn as_binel(self) -> ::celeste::binel::serialize::BinElValue {
+            fn into_binel(self) -> ::celeste::binel::serialize::BinElValue {
                 use ::celeste::binel::*;
 
                 let mut binel = BinEl::new(#name);
 
                 #(
-                    match serialize::BinElType::as_binel(self.#idents) {
+                    match serialize::BinElType::into_binel(self.#idents) {
                         serialize::BinElValue::Attribute(attr) => {
                             binel.attributes.insert(#names.to_string(), attr);
                         },
@@ -118,6 +115,17 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                             binel.insert(child);
                         }
                     };
+                )*
+
+                #(
+                    for child in self.#vec_idents {
+                        match serialize::BinElType::into_binel(child) {
+                            serialize::BinElValue::Attribute(_) => panic!("Can't serialize Vec of attributes!"),
+                            serialize::BinElValue::Element(child) => {
+                                binel.insert(child);
+                            }
+                        }
+                    }
                 )*
 
                 serialize::BinElValue::Element(binel)
