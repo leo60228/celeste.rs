@@ -155,7 +155,7 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let d_types_attr = d_types.iter();
     let d_types = d_types.iter();
     let d_vec_idents = s_vec_fields.iter();
-    let d_vec_types_option = d_vec_types_inner.iter();
+    let d_vec_idents_push = s_vec_fields.iter();
     let d_vec_types_inner = d_vec_types_inner.iter();
     let d_idents = s_idents.iter().chain(s_vec_idents.iter());
     let d_fields = s_fields.iter().chain(s_vec_fields.iter());
@@ -185,9 +185,14 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                     };
                 )*
 
+                #(
+                    let mut #d_vec_idents: #d_vec_types = vec![];
+                )*
+
                 for child in binel.drain() {
                     #(
-                        let maybe = <#d_types as serialize::BinElType>::from_binel(serialize::BinElValue::Element(child.clone()));
+                        let maybe = <#d_types as serialize::BinElType>
+                            ::from_binel(serialize::BinElValue::Element(child.clone()));
 
                         #d_idents_checked = match (#d_idents_check, maybe) {
                             (Some(_), Some(_)) => return None,
@@ -200,26 +205,18 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                             continue;
                         }
                     )*
+                    #(
+                        let maybe = <#d_vec_types_inner as serialize::BinElType>
+                            ::from_binel(serialize::BinElValue::Element(child.clone()));
+                        
+                        if let Some(elem) = maybe {
+                            #d_vec_idents_push.push(elem);
+                        }
+                    )*
                 }
 
                 #(
                     let #d_idents_plain = #d_idents_some?;
-                )*
-
-                #(
-                    let children = binel.get_mut(#d_vec_names); // move out of vec
-                    
-                    let mut maybe_valid: Vec<Option<#d_vec_types_option>> = 
-                        children.drain(..)
-                                .map(|e| <#d_vec_types_inner as serialize::BinElType>
-                                         ::from_binel(serialize::BinElValue::Element(e)))
-                                .collect();
-
-                    if maybe_valid.iter().any(|e| e.is_none()) {
-                        return None;
-                    }
-
-                    let #d_vec_idents = maybe_valid.drain(..).map(|e| e.unwrap()).collect();
                 )*
 
                 let new: Self = Self { #(#d_idents: #d_fields),* };

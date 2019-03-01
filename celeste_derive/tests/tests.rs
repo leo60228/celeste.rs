@@ -193,4 +193,17 @@ fn create_child_vec() -> BinEl {
 }
 
 #[test]
+fn deserialize_child_vec() {
+    let deserialized = MultipleChildren::from_binel(BinElValue::Element(create_child_vec()));
+    assert_eq!(deserialized, Some(MultipleChildren {
+        child: EmptyMixedCase {},
+        children: vec![
+            OneField { number_field: 5 },
+            OneField { number_field: 5 },
+            OneField { number_field: 5 }
+        ]
+    }));
+}
+
+#[test]
 fn serialize_child_vec() {create_child_vec();}
