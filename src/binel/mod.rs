@@ -18,7 +18,7 @@ pub struct BinFile {
 }
 
 /// A value stored in an attribute inside a `BinEl`. Unlike XML, attributes are strongly typed.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum BinElAttr {
     Bool(bool),
     Int(i32),
@@ -27,7 +27,7 @@ pub enum BinElAttr {
 }
 
 /// An element stored in a `BinFile`. Based on XML.
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct BinEl {
     /// The name of the `BinEl`.
     pub name: String,
@@ -103,6 +103,12 @@ impl BinEl {
     #[inline]
     pub fn get_mut(&mut self, name: &str) -> &mut Vec<Self> {
         self.children.entry(name.to_string()).or_insert_with(|| vec![])
+    }
+
+    /// Drain all children of the `BinEl`.
+    #[inline]
+    pub fn drain<'a>(&'a mut self) -> impl Iterator<Item=Self> + 'a {
+        self.children.drain().map(|(_k, v)| v).flatten()
     }
 }
 

@@ -37,6 +37,8 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         }
     }
 
+    let d_check_name = name.clone();
+
     let body = match input.data {
         Data::Struct(body) => body,
         _ => panic!("You can only derive BinElType on structs!")
@@ -134,15 +136,29 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         }
     }
 
+    // prepend "field_"
+    let s_fields: Vec<Ident> = s_idents.iter()
+                                       .map(|e| Ident::new(format!("field_{}", e.to_string()).as_str(), e.span()))
+                                       .collect();
+    let s_vec_fields: Vec<Ident> = s_vec_idents.iter()
+                                               .map(|e| Ident::new(format!("field_{}", e.to_string()).as_str(), e.span()))
+                                               .collect();
+
     // disable mutability and make into iterators
-    let d_idents = s_idents.iter();
+    let d_idents_check = s_fields.iter();
+    let d_idents_checked = s_fields.iter();
+    let d_idents_continue = s_fields.iter();
+    let d_idents_attr = s_fields.iter();
+    let d_idents_plain = s_fields.iter();
+    let d_idents_some = s_fields.iter();
     let d_names = s_names.iter();
+    let d_types_attr = d_types.iter();
     let d_types = d_types.iter();
-    let d_vec_idents = s_vec_idents.iter();
+    let d_vec_idents = s_vec_fields.iter();
     let d_vec_types_option = d_vec_types_inner.iter();
     let d_vec_types_inner = d_vec_types_inner.iter();
-    let d_fields = s_idents.iter().chain(s_vec_idents.iter());
-    let s_idents = s_idents.iter();
+    let d_idents = s_idents.iter().chain(s_vec_idents.iter());
+    let d_fields = s_fields.iter().chain(s_vec_fields.iter());
     let s_names = s_names.iter();
     let s_vec_idents = s_vec_idents.iter();
 
@@ -158,21 +174,36 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                     _ => return None
                 };
 
-                #(
-                    let name = #d_names;
+                if binel.name != #d_check_name {
+                    return None;
+                }
 
-                    let attr = binel.attributes.remove(name); // move out of map
-                    let child = binel.get_mut(name); // move out of vec
-                    
-                    let field = match (child.len(), attr) {
-                        (1, Some(_)) => return None, // having both is invalid
-                        (0, None) => return None, // having neither is invalid
-                        (1, None) => serialize::BinElValue::Element(child.pop().unwrap()), // single child
-                        (0, Some(attr)) => serialize::BinElValue::Attribute(attr), // attribute
-                        _ => return None // more than one child
+                #(
+                    let mut #d_idents_attr = match binel.attributes.remove(#d_names) {
+                        Some(attr) => <#d_types_attr as serialize::BinElType>::from_binel(serialize::BinElValue::Attribute(attr)),
+                        None => None
                     };
-                    
-                    let #d_idents = <#d_types as serialize::BinElType>::from_binel(field)?;
+                )*
+
+                for child in binel.drain() {
+                    #(
+                        let maybe = <#d_types as serialize::BinElType>::from_binel(serialize::BinElValue::Element(child.clone()));
+
+                        #d_idents_checked = match (#d_idents_check, maybe) {
+                            (Some(_), Some(_)) => return None,
+                            (Some(attr), None) => Some(attr),
+                            (None, Some(child)) => Some(child),
+                            (None, None) => None
+                        };
+
+                        if #d_idents_continue.is_some() {
+                            continue;
+                        }
+                    )*
+                }
+
+                #(
+                    let #d_idents_plain = #d_idents_some?;
                 )*
 
                 #(
@@ -191,7 +222,7 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                     let #d_vec_idents = maybe_valid.drain(..).map(|e| e.unwrap()).collect();
                 )*
 
-                let new: Self = Self { #(#d_fields),* };
+                let new: Self = Self { #(#d_idents: #d_fields),* };
 
                 Some(new)
             }

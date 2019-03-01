@@ -1,37 +1,36 @@
 use celeste_derive::BinElType;
 use celeste::binel::{serialize::*, *};
 
-#[derive(BinElType)]
+#[derive(Eq, PartialEq, Debug, BinElType)]
 struct EmptyMixedCase {}
 
-#[derive(BinElType, Clone)]
+#[derive(Eq, PartialEq, Debug, BinElType, Clone)]
 struct OneField {
-    number_field: i16
+    pub number_field: i16
 }
 
-#[derive(BinElType)]
+#[derive(Eq, PartialEq, Debug, BinElType)]
 struct Recursive {
-    elem_field: OneField,
-    string_field: String
+    pub elem_field: OneField,
+    pub string_field: String
 }
 
-#[derive(BinElType)]
+#[derive(Eq, PartialEq, Debug, BinElType)]
 #[celeste_name = "new/name"]
 struct Renamed {
     #[celeste_name = "changed.field"]
-    orig_name: u8,
-    kept_name: f32
+    pub orig_name: u8,
+    pub kept_name: u16
 }
 
-#[derive(BinElType)]
+#[derive(Eq, PartialEq, Debug, BinElType)]
 struct MultipleChildren {
     #[celeste_child_vec]
-    children: Vec<OneField>,
-    child: EmptyMixedCase
+    pub children: Vec<OneField>,
+    pub child: EmptyMixedCase
 }
 
-#[test]
-fn create_empty() {
+fn create_empty() -> BinEl {
     let binel = match (EmptyMixedCase {}).into_binel() {
         BinElValue::Element(elem) => elem,
         _ => panic!("Didn't get element!")
@@ -40,10 +39,20 @@ fn create_empty() {
     assert_eq!(binel.name, "emptyMixedCase");
     assert_eq!(binel.children().count(), 0);
     assert_eq!(binel.attributes.len(), 0);
+
+    binel
 }
 
 #[test]
-fn create_attr() {
+fn serialize_empty() {create_empty();}
+
+#[test]
+fn deserialize_empty() {
+    let deserialized = EmptyMixedCase::from_binel(BinElValue::Element(create_empty()));
+    assert_eq!(deserialized, Some(EmptyMixedCase {}));
+}
+
+fn create_attr() -> BinEl {
     let number_field = -4;
 
     let binel = match (OneField {number_field}).into_binel() {
@@ -59,14 +68,24 @@ fn create_attr() {
         BinElAttr::Int(num) => assert_eq!(*num, number_field as i32),
         _ => panic!("Didn't get int!")
     }
+
+    binel
 }
 
 #[test]
-fn create_renamed() {
-    let int_field: u8 = 255;
-    let float_field: f32 = 4.01;
+fn serialize_attr() {create_attr();}
 
-    let binel = match (Renamed {orig_name: int_field, kept_name: float_field}).into_binel() {
+#[test]
+fn deserialize_attr() {
+    let deserialized = OneField::from_binel(BinElValue::Element(create_attr()));
+    assert_eq!(deserialized, Some(OneField {number_field: -4}));
+}
+
+fn create_renamed() -> BinEl {
+    let orig_name: u8 = 255;
+    let kept_name: u16 = 65535;
+
+    let binel = match (Renamed {orig_name, kept_name}).into_binel() {
         BinElValue::Element(elem) => elem,
         _ => panic!("Didn't get element!")
     };
@@ -76,18 +95,28 @@ fn create_renamed() {
     assert_eq!(binel.attributes.len(), 2);
 
     match binel.attributes.get("changed.field").expect("orig_name wasn't renamed!") {
-        BinElAttr::Int(num) => assert_eq!(*num, int_field as i32),
+        BinElAttr::Int(num) => assert_eq!(*num, orig_name as i32),
         _ => panic!("Didn't get int!")
     }
 
     match binel.attributes.get("keptName").unwrap() {
-        BinElAttr::Float(num) => assert_eq!(*num, float_field),
-        _ => panic!("Didn't get float!")
+        BinElAttr::Int(num) => assert_eq!(*num, kept_name as i32),
+        _ => panic!("Didn't get int!")
     }
+
+    binel
 }
 
 #[test]
-fn create_recursive() {
+fn deserialize_renamed() {
+    let deserialized = Renamed::from_binel(BinElValue::Element(create_renamed()));
+    assert_eq!(deserialized, Some(Renamed {orig_name: 255, kept_name: 65535}));
+}
+
+#[test]
+fn serialize_renamed() {create_renamed();}
+
+fn create_recursive() -> BinEl {
     let number_field = -4;
     let string_field = "Hello, world!";
 
@@ -118,10 +147,25 @@ fn create_recursive() {
         BinElAttr::Int(num) => assert_eq!(*num, number_field as i32),
         _ => panic!("Didn't get int!")
     }
+
+    binel
 }
 
 #[test]
-fn create_child_vec() {
+fn deserialize_recursive() {
+    let deserialized = Recursive::from_binel(BinElValue::Element(create_recursive()));
+    assert_eq!(deserialized, Some(Recursive {
+        string_field: "Hello, world!".to_string(),
+        elem_field: OneField {
+            number_field: -4
+        }
+    }));
+}
+
+#[test]
+fn serialize_recursive() {create_recursive();}
+
+fn create_child_vec() -> BinEl {
     let one_field = OneField { number_field: 5 };
     let vec = vec![one_field.clone(), one_field.clone(), one_field];
 
@@ -144,4 +188,9 @@ fn create_child_vec() {
             _ => panic!("Didn't get int!")
         }
     }
+    
+    binel
 }
+
+#[test]
+fn serialize_child_vec() {create_child_vec();}
