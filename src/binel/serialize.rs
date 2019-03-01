@@ -5,7 +5,8 @@ pub use celeste_derive::*;
 
 pub enum BinElValue {
     Attribute(BinElAttr),
-    Element(BinEl)
+    Element(BinEl),
+    None
 }
 
 pub trait BinElType: Sized {
@@ -74,6 +75,19 @@ impl BinElType for BinElAttr {
     fn maybe_elem() -> bool { false }
 }
 
+impl<T: BinElType> BinElType for Option<T> {
+    fn into_binel(self) -> BinElValue {
+        match self {
+            Some(inner) => inner.into_binel(),
+            None => BinElValue::None
+        }
+    }
+
+    fn from_binel(binel: BinElValue) -> Option<Self> {
+        Some(T::from_binel(binel))
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::binel::serialize::{BinElValue, BinElType};
@@ -106,6 +120,11 @@ mod test {
         #[celeste_child_vec]
         pub children: Vec<OneField>,
         pub child: EmptyMixedCase
+    }
+
+    #[derive(Eq, PartialEq, Debug, BinElType)]
+    struct Optional {
+        pub child: Option<EmptyMixedCase>
     }
 
     fn create_empty() -> BinEl {
@@ -285,4 +304,47 @@ mod test {
 
     #[test]
     fn serialize_child_vec() {create_child_vec();}
+    
+    fn create_optional_some() -> BinEl {
+        let binel = match (Optional { child: Some(EmptyMixedCase {}) }).into_binel() {
+            BinElValue::Element(elem) => elem,
+            _ => panic!("Didn't get element!")
+        };
+
+        assert_eq!(binel.children().count(), 1);
+        assert_eq!(binel.get("emptyMixedCase").len(), 1);
+        
+        binel
+    }
+    
+    #[test]
+    fn serialize_optional_some() {create_optional_some();}
+
+    #[test]
+    fn deserialize_optional_some() {
+        assert_eq!(Optional::from_binel(BinElValue::Element(create_optional_some())), Some(Optional {
+            child: Some(EmptyMixedCase {})
+        }));
+    }
+
+    fn create_optional_none() -> BinEl {
+        let binel = match (Optional { child: None }).into_binel() {
+            BinElValue::Element(elem) => elem,
+            _ => panic!("Didn't get element!")
+        };
+
+        assert_eq!(binel.children().count(), 0);
+        
+        binel
+    }
+    
+    #[test]
+    fn serialize_optional_none() {create_optional_none();}
+
+    #[test]
+    fn deserialize_optional_none() {
+        assert_eq!(Optional::from_binel(BinElValue::Element(create_optional_none())), Some(Optional {
+            child: None
+        }));
+    }
 }

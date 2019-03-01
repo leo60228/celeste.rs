@@ -53,6 +53,8 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let mut d_vec_types = Vec::new();
     let mut d_vec_types_inner = Vec::new();
     let mut d_vec_names = Vec::new();
+    let mut d_req_idents = Vec::new();
+    let mut d_opt_idents = Vec::new();
 
     for ref field in body.fields.iter() {
         let mut is_vec = false;
@@ -85,54 +87,69 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 _ => {}
             }
         }
+
+        let mut is_opt = false;
+
+        match &field.ty {
+            Type::Path(path) => {
+                let path = &path.path;
+
+                let last = path.segments.last();
+
+                if let Some(last) = match last {
+                    Some(punctuated::Pair::Punctuated(segment, _)) => Some(segment),
+                    Some(punctuated::Pair::End(segment)) => Some(segment),
+                    _ => if is_vec {panic!("A field with celeste_child_vec must have a type!")} else {None}
+                } {
+                    if last.ident.to_string() == "Option" {
+                        is_opt = true;
+                    }
+
+                    if is_vec {
+                        match &last.arguments {
+                            PathArguments::AngleBracketed(args) => {
+                                let args = &args.args;
+
+                                let mut found_type = false;
+
+                                for e in args {
+                                    if let GenericArgument::Type(typ) = e {
+                                        if found_type {
+                                            panic!("A field with celeste_child_vec's type must have a single generic argument!");
+                                        }
+
+                                        d_vec_types_inner.push(typ.clone());
+                                        found_type = true;
+                                    }
+                                }
+
+                                if !found_type {
+                                    panic!("A field with celeste_child_vec's type must have a single generic argument!");
+                                }
+                            },
+                            _ => panic!("A field with celeste_child_vec's type must be generic!")
+                        }
+                    }
+                }
+            },
+            _ => if is_vec {panic!("A field with celeste_child_vec's type must be a normal type!")}
+        }
+
         if !is_vec {
+            if is_opt {
+                d_opt_idents.push(ident.clone());
+            } else {
+                d_req_idents.push(ident.clone());
+            }
+
             s_idents.push(ident);
             s_names.push(name);
+
             d_types.push(field.ty.clone());
         } else {
             s_vec_idents.push(ident);
 
             d_vec_types.push(field.ty.clone());
-            
-            match &field.ty {
-                Type::Path(path) => {
-                    let path = &path.path;
-
-                    let last = path.segments.last();
-
-                    let last = match last {
-                        Some(punctuated::Pair::Punctuated(segment, _)) => segment,
-                        Some(punctuated::Pair::End(segment)) => segment,
-                        _ => panic!("A field with celeste_child_vec's type must be generic!")
-                    };
-
-                    match &last.arguments {
-                        PathArguments::AngleBracketed(args) => {
-                            let args = &args.args;
-
-                            let mut found_type = false;
-
-                            for e in args {
-                                if let GenericArgument::Type(typ) = e {
-                                    if found_type {
-                                        panic!("A field with celeste_child_vec's type must have a single generic argument!");
-                                    }
-
-                                    d_vec_types_inner.push(typ.clone());
-                                    found_type = true;
-                                }
-                            }
-
-                            if !found_type {
-                                panic!("A field with celeste_child_vec's type must have a single generic argument!");
-                            }
-                        },
-                        _ => panic!("A field with celeste_child_vec's type must be generic!")
-                    }
-                },
-                _ => panic!("A field with celeste_child_vec's type must be a normal type!")
-            }
-
             d_vec_names.push(name);
         }
     }
@@ -145,14 +162,19 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                                                .map(|e| Ident::new(format!("field_{}", e.to_string()).as_str(), e.span()))
                                                .collect();
 
+    let d_req_idents: Vec<Ident> = d_req_idents.iter()
+                                               .map(|e| Ident::new(format!("field_{}", e.to_string()).as_str(), e.span()))
+                                               .collect();
+    let d_opt_idents: Vec<Ident> = d_opt_idents.iter()
+                                               .map(|e| Ident::new(format!("field_{}", e.to_string()).as_str(), e.span()))
+                                               .collect();
+
     // disable mutability and make into iterators
     let d_idents_check = s_fields.iter();
     let d_idents_checked = s_fields.iter();
     let d_idents_continue = s_fields.iter();
     let d_idents_attr = s_fields.iter();
-    let d_idents_plain = s_fields.iter();
     let d_idents_none = s_fields.iter();
-    let d_idents_some = s_fields.iter();
     let d_names = s_names.iter();
     let d_types_attr = d_types.iter();
     let d_types_maybe_attr = d_types.iter();
@@ -163,6 +185,10 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let d_vec_idents_push = s_vec_fields.iter();
     let d_vec_types_name = d_vec_types_inner.iter();
     let d_vec_types_inner = d_vec_types_inner.iter();
+    let d_opt_idents_match = d_opt_idents.iter();
+    let d_opt_idents = d_opt_idents.iter();
+    let d_req_idents_check = d_req_idents.iter();
+    let d_req_idents = d_req_idents.iter();
     let d_idents = s_idents.iter().chain(s_vec_idents.iter());
     let d_fields = s_fields.iter().chain(s_vec_fields.iter());
     let s_names = s_names.iter();
@@ -231,7 +257,13 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 }
 
                 #(
-                    let #d_idents_plain = #d_idents_some?;
+                    let #d_req_idents = #d_req_idents_check?;
+                )*
+                #(
+                    let #d_opt_idents = match #d_opt_idents_match {
+                        Some(Some(val)) => Some(val),
+                        _ => None
+                    };
                 )*
 
                 let new: Self = Self { #(#d_idents: #d_fields),* };
@@ -251,7 +283,8 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                         },
                         serialize::BinElValue::Element(child) => {
                             binel.insert(child);
-                        }
+                        },
+                        serialize::BinElValue::None => {}
                     };
                 )*
 
@@ -261,7 +294,8 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                             serialize::BinElValue::Attribute(_) => panic!("Can't serialize Vec of attributes!"),
                             serialize::BinElValue::Element(child) => {
                                 binel.insert(child);
-                            }
+                            },
+                            serialize::BinElValue::None => {}
                         }
                     }
                 )*
