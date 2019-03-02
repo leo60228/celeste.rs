@@ -8,25 +8,25 @@ jobs:
       toolchain: 'nightly'
   - template: templates/tests.yml
     parameters:
-      vmImage: 'vs2017-win2016'
+      os: 'windows'
   - template: templates/tests.yml
     parameters:
-      vmImage: 'vs2017-win2016'
+      os: 'windows'
       toolchain: 'beta'
   - template: templates/tests.yml
     parameters:
-      vmImage: 'vs2017-win2016'
+      os: 'windows'
       toolchain: 'nightly'
   - template: templates/tests.yml
     parameters:
-      vmImage: 'macos-10.13'
+      os: 'macos'
   - template: templates/tests.yml
     parameters:
-      vmImage: 'macos-10.13'
+      os: 'macos'
       toolchain: 'beta'
   - template: templates/tests.yml
     parameters:
-      vmImage: 'macos-10.13'
+      os: 'macos'
       toolchain: 'nightly'
   - job: 'Clippy'
     pool:
