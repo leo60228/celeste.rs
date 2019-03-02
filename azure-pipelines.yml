@@ -1,14 +1,14 @@
 jobs:
-  - template: templates/tests.yml
+#  - template: templates/tests.yml
   - template: templates/tests.yml
     parameters:
       toolchain: 'beta'
   - template: templates/tests.yml
     parameters:
       toolchain: 'nightly'
-  - template: templates/tests.yml
-    parameters:
-      os: 'Windows'
+#  - template: templates/tests.yml
+#    parameters:
+#      os: 'Windows'
   - template: templates/tests.yml
     parameters:
       os: 'Windows'
@@ -17,9 +17,9 @@ jobs:
     parameters:
       os: 'Windows'
       toolchain: 'nightly'
-  - template: templates/tests.yml
-    parameters:
-      os: 'macOS'
+#  - template: templates/tests.yml
+#    parameters:
+#      os: 'macOS'
   - template: templates/tests.yml
     parameters:
       os: 'macOS'
@@ -28,12 +28,7 @@ jobs:
     parameters:
       os: 'macOS'
       toolchain: 'nightly'
-  - job: 'Clippy'
-    pool:
-      vmImage: 'ubuntu-16.04'
-    container: 'rust:latest'
-    steps:
-      - script: rustup component add clippy
-        displayName: Install Clippy
-      - script: cargo clippy --all
-        displayName: Clippy
+  - template: templates/tests.yml
+    parameters:
+      toolchain: 'beta'
+      clippy: true
