@@ -31,4 +31,4 @@ jobs:
   - template: templates/tests.yml
     parameters:
       toolchain: 'beta'
-      clippy: true
+      style: true

@@ -1,5 +1,5 @@
-use crate::binel::*;
 use crate::binel::serialize::*;
+use crate::binel::*;
 
 #[derive(Clone, PartialEq, Debug, Default, BinElType)]
 #[celeste_name = "Style"]
@@ -93,7 +93,7 @@ pub struct Level {
     pub fgtiles: FGTiles,
     pub bgtiles: BGTiles,
     pub solids: Solids,
-    pub bg: BGSolids,
+    pub bg: BGSolids
 }
 
 #[derive(Clone, PartialEq, Debug, Default, BinElType)]

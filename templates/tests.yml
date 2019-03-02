@@ -1,14 +1,14 @@
 parameters:
   toolchain: 'stable'
   os: 'Ubuntu'
-  clippy: false
+  style: false
 
 jobs:
-  - job: ${{ format('{0}_{1}_clippy_{2}', parameters.os, parameters.toolchain, parameters.clippy) }}
-    ${{ if ne(parameters.clippy, 'true') }}:
+  - job: ${{ format('{0}_{1}_clippy_{2}', parameters.os, parameters.toolchain, parameters.style) }}
+    ${{ if ne(parameters.style, 'true') }}:
       displayName: ${{ format('{0} with Rust {1}', parameters.os, parameters.toolchain) }} # 'vim oddity fix
-    ${{ if eq(parameters.clippy, 'true') }}:
-      displayName: ${{ format('Clippy ({0} with Rust {1})', parameters.os, parameters.toolchain) }}
+    ${{ if eq(parameters.style, 'true') }}:
+      displayName: ${{ format('Clippy + Rustfmt ({0} with Rust {1})', parameters.os, parameters.toolchain) }}
     variables:
       rustup_toolchain: ${{ parameters.toolchain }}
     pool:
@@ -30,16 +30,20 @@ jobs:
             curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain $RUSTUP_TOOLCHAIN
             echo "##vso[task.setvariable variable=PATH;]$PATH:$HOME/.cargo/bin"
           displayName: Install Rust via Bash
-      - ${{ if ne(parameters.clippy, 'true') }}:
+      - ${{ if ne(parameters.style, 'true') }}:
         - script: cargo build --all
           displayName: Build
         - script: cargo test --all
           displayName: Tests
-      - ${{ if eq(parameters.clippy, 'true') }}:
+      - ${{ if eq(parameters.style, 'true') }}:
         - script: rustup component add clippy
           displayName: Install Clippy
         - script: cargo clippy --all -- -D clippy::all
           displayName: Clippy
+        - script: rustup component add rustfmt
+          displayName: Install Rustfmt
+        - bash: cargo fmt --all -- --check && cd celeste_derive/ && cargo fmt --all -- --check
+          displayName: Rustfmt
 
     ${{ if eq(parameters.toolchain, 'nightly') }}:
       continueOnError: true

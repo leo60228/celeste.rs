@@ -1,7 +1,7 @@
-use std::io::{prelude::*, Error, ErrorKind};
 use super::*;
 use byteorder::{LittleEndian, WriteBytesExt};
 use itertools::Itertools;
+use std::io::{prelude::*, Error, ErrorKind};
 
 /// Write a string using a varint for the length.
 ///
@@ -60,11 +60,20 @@ pub fn put_tagged_f32(writer: &mut dyn Write, val: f32) -> std::io::Result<()> {
 
 /// Encode a string in Celeste's RLE format. Allocates two bytes on the heap due to a current limitation of iterators.
 pub fn encode_rle_string(string: &str) -> Vec<u8> {
-    string.bytes().group_by(|e| *e).into_iter().flat_map(|(ch, run)| vec![run.count() as u8, ch]).collect() // rust#25725
+    string
+        .bytes()
+        .group_by(|e| *e)
+        .into_iter()
+        .flat_map(|(ch, run)| vec![run.count() as u8, ch])
+        .collect() // rust#25725
 }
 
 /// Write a string either using a lookup (stored as u16, tagged with 0x05), Celeste's RLE format (tagged with 0x07), or using a varint (tagged with 0x06).
-pub fn put_tagged_str(mut writer: &mut dyn Write, lookup: &[String], val: &str) -> std::io::Result<()> {
+pub fn put_tagged_str(
+    mut writer: &mut dyn Write,
+    lookup: &[String],
+    val: &str
+) -> std::io::Result<()> {
     if let Some(index) = lookup.iter().position(|e| *e == val) {
         writer.write_u8(0x05)?;
         writer.write_u16::<LittleEndian>(index as u16)?;
@@ -85,10 +94,19 @@ pub fn put_tagged_str(mut writer: &mut dyn Write, lookup: &[String], val: &str) 
 }
 
 /// Write a `BinEl` using an existing lookup table for element and attribute named.
-pub fn put_element(mut writer: &mut dyn Write, lookup: &[String], elem: &BinEl) -> std::io::Result<()> {
+pub fn put_element(
+    mut writer: &mut dyn Write,
+    lookup: &[String],
+    elem: &BinEl
+) -> std::io::Result<()> {
     let name_index = match lookup.iter().position(|e| *e == elem.name) {
         Some(p) => p,
-        None => return Err(Error::new(ErrorKind::NotFound, format!("Element name {} is missing in lookup", elem.name)))
+        None => {
+            return Err(Error::new(
+                ErrorKind::NotFound,
+                format!("Element name {} is missing in lookup", elem.name)
+            ))
+        }
     };
 
     writer.write_u16::<LittleEndian>(name_index as u16)?;
@@ -97,7 +115,12 @@ pub fn put_element(mut writer: &mut dyn Write, lookup: &[String], elem: &BinEl) 
     for (attr, value) in &elem.attributes {
         let attr_index = match lookup.iter().position(|e| e == attr) {
             Some(p) => p,
-            None => return Err(Error::new(ErrorKind::NotFound, format!("Attribute name {} is missing in lookup", attr)))
+            None => {
+                return Err(Error::new(
+                    ErrorKind::NotFound,
+                    format!("Attribute name {} is missing in lookup", attr)
+                ))
+            }
         };
         writer.write_u16::<LittleEndian>(attr_index as u16)?;
         match value {
@@ -117,7 +140,10 @@ pub fn put_element(mut writer: &mut dyn Write, lookup: &[String], elem: &BinEl) 
 }
 
 fn gen_lookup_keys(binel: &BinEl, mut seen: &mut HashMap<String, usize>) {
-    seen.insert(binel.name.clone(), seen.get(binel.name.as_str()).unwrap_or(&0) + 1);
+    seen.insert(
+        binel.name.clone(),
+        seen.get(binel.name.as_str()).unwrap_or(&0) + 1
+    );
 
     for (k, v) in &binel.attributes {
         seen.insert(k.clone(), seen.get(k.as_str()).unwrap_or(&0) + 1);

@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use lazy_static::lazy_static;
+use std::collections::HashMap;
 
 /// `parser` parses `BinaryElement` files.
 pub mod parser;
@@ -14,7 +14,7 @@ pub mod serialize;
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct BinFile {
     pub package: String,
-    pub root: BinEl,
+    pub root: BinEl
 }
 
 /// A value stored in an attribute inside a `BinEl`. Unlike XML, attributes are strongly typed.
@@ -72,7 +72,8 @@ impl BinEl {
     /// Set the text content of the `BinEl`.
     #[inline]
     pub fn set_text(&mut self, text: &str) -> Option<BinElAttr> {
-        self.attributes.insert("innerText".to_string(), BinElAttr::Text(text.to_string()))
+        self.attributes
+            .insert("innerText".to_string(), BinElAttr::Text(text.to_string()))
     }
 
     /// Add a child to the `BinEl`.
@@ -83,13 +84,13 @@ impl BinEl {
 
     /// Get all children of the `BinEl`.
     #[inline]
-    pub fn children<'a>(&'a self) -> impl Iterator<Item=&Self> + 'a {
+    pub fn children<'a>(&'a self) -> impl Iterator<Item = &Self> + 'a {
         self.children.values().flatten()
     }
 
     /// Get all children of the `BinEl`, mutable.
     #[inline]
-    pub fn children_mut<'a>(&'a mut self) -> impl Iterator<Item=&mut Self> + 'a {
+    pub fn children_mut<'a>(&'a mut self) -> impl Iterator<Item = &mut Self> + 'a {
         self.children.values_mut().flatten()
     }
 
@@ -102,12 +103,14 @@ impl BinEl {
     /// Get mutable children of the `BinEl` by name.
     #[inline]
     pub fn get_mut(&mut self, name: &str) -> &mut Vec<Self> {
-        self.children.entry(name.to_string()).or_insert_with(|| vec![])
+        self.children
+            .entry(name.to_string())
+            .or_insert_with(|| vec![])
     }
 
     /// Drain all children of the `BinEl`.
     #[inline]
-    pub fn drain<'a>(&'a mut self) -> impl Iterator<Item=Self> + 'a {
+    pub fn drain<'a>(&'a mut self) -> impl Iterator<Item = Self> + 'a {
         self.children.drain().map(|(_k, v)| v).flatten()
     }
 }
@@ -136,11 +139,19 @@ mod test {
         file.root.insert(BinEl::new("one"));
         file.root.insert(BinEl::new("two"));
         assert_eq!(file.root.get_mut("one")[0].set_text("hello"), None);
-        assert_eq!(file.root.get_mut("two")[0].attributes.insert("word".to_string(), BinElAttr::Text("world".to_string())), None);
+        assert_eq!(
+            file.root.get_mut("two")[0]
+                .attributes
+                .insert("word".to_string(), BinElAttr::Text("world".to_string())),
+            None
+        );
 
         assert_eq!(file.root.get("one")[0].text(), Some(&"hello".to_string()));
         assert_eq!(file.root.get("two")[0].text(), None);
-        assert_eq!(file.root.get("two")[0].attributes.get("word"), Some(&BinElAttr::Text("world".to_string())));
+        assert_eq!(
+            file.root.get("two")[0].attributes.get("word"),
+            Some(&BinElAttr::Text("world".to_string()))
+        );
         assert_eq!(file.root.get("three"), &empty_binel);
     }
 }

@@ -1,4 +1,7 @@
-use celeste::{*, binel::{*, serialize::*}};
+use celeste::{
+    binel::{serialize::*, *},
+    *
+};
 use error_chain::ChainedError;
 
 fn main() {

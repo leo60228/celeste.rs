@@ -1,10 +1,10 @@
-#![recursion_limit="2048"]
+#![recursion_limit = "2048"]
 
 extern crate proc_macro;
 
+use heck::MixedCase;
 use quote::quote;
 use syn::*;
-use heck::MixedCase;
 
 #[proc_macro_derive(BinElType, attributes(celeste_child_vec, celeste_name, celeste_skip))]
 pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -17,15 +17,39 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     for ref attr in input.attrs.iter() {
         match attr.parse_meta() {
             Ok(Meta::Word(word)) => {
-                assert_ne!(word.to_string(), "celeste_name", "celeste_name must have a value!");
-                assert_ne!(word.to_string(), "celeste_child_vec", "celeste_child_vec is only valid on fields!");
-                assert_ne!(word.to_string(), "celeste_skip", "celeste_skip is only valid on fields!");
-            },
+                assert_ne!(
+                    word.to_string(),
+                    "celeste_name",
+                    "celeste_name must have a value!"
+                );
+                assert_ne!(
+                    word.to_string(),
+                    "celeste_child_vec",
+                    "celeste_child_vec is only valid on fields!"
+                );
+                assert_ne!(
+                    word.to_string(),
+                    "celeste_skip",
+                    "celeste_skip is only valid on fields!"
+                );
+            }
             Ok(Meta::List(list)) => {
-                assert_ne!(list.ident.to_string(), "celeste_name", "celeste_name must have a value!");
-                assert_ne!(list.ident.to_string(), "celeste_child_vec", "celeste_child_vec is only valid on fields!");
-                assert_ne!(list.ident.to_string(), "celeste_skip", "celeste_skip is only valid on fields!");
-            },
+                assert_ne!(
+                    list.ident.to_string(),
+                    "celeste_name",
+                    "celeste_name must have a value!"
+                );
+                assert_ne!(
+                    list.ident.to_string(),
+                    "celeste_child_vec",
+                    "celeste_child_vec is only valid on fields!"
+                );
+                assert_ne!(
+                    list.ident.to_string(),
+                    "celeste_skip",
+                    "celeste_skip is only valid on fields!"
+                );
+            }
             Ok(Meta::NameValue(kv)) => {
                 if kv.ident.to_string() == "celeste_name" {
                     name = match kv.lit {
@@ -33,9 +57,17 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                         _ => panic!("celeste_name must be a string!")
                     };
                 }
-                assert_ne!(kv.ident.to_string(), "celeste_child_vec", "celeste_child_vec is only valid on fields!");
-                assert_ne!(kv.ident.to_string(), "celeste_skip", "celeste_skip is only valid on fields!");
-            },
+                assert_ne!(
+                    kv.ident.to_string(),
+                    "celeste_child_vec",
+                    "celeste_child_vec is only valid on fields!"
+                );
+                assert_ne!(
+                    kv.ident.to_string(),
+                    "celeste_skip",
+                    "celeste_skip is only valid on fields!"
+                );
+            }
             _ => {}
         }
     }
@@ -66,7 +98,7 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         let mut is_vec = false;
         let ident = match &field.ident {
             &Some(ref ident) => ident.clone(),
-            &None => panic!("Your struct is missing a field identity!"),
+            &None => panic!("Your struct is missing a field identity!")
         };
         let mut name = ident.to_string().to_mixed_case();
         for ref attr in field.attrs.iter() {
@@ -78,13 +110,29 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                     if word.to_string() == "celeste_skip" {
                         skip = true;
                     }
-                    assert_ne!(word.to_string(), "celeste_name", "celeste_name must have a value!");
-                },
+                    assert_ne!(
+                        word.to_string(),
+                        "celeste_name",
+                        "celeste_name must have a value!"
+                    );
+                }
                 Ok(Meta::List(list)) => {
-                    assert_ne!(list.ident.to_string(), "celeste_name", "celeste_name must have a value!");
-                    assert_ne!(list.ident.to_string(), "celeste_child_vec", "celeste_child_vec has no arguments!");
-                    assert_ne!(list.ident.to_string(), "celeste_skip", "celeste_skip has no arguments!");
-                },
+                    assert_ne!(
+                        list.ident.to_string(),
+                        "celeste_name",
+                        "celeste_name must have a value!"
+                    );
+                    assert_ne!(
+                        list.ident.to_string(),
+                        "celeste_child_vec",
+                        "celeste_child_vec has no arguments!"
+                    );
+                    assert_ne!(
+                        list.ident.to_string(),
+                        "celeste_skip",
+                        "celeste_skip has no arguments!"
+                    );
+                }
                 Ok(Meta::NameValue(kv)) => {
                     if kv.ident.to_string() == "celeste_name" {
                         name = match kv.lit {
@@ -92,9 +140,17 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                             _ => panic!("celeste_name must be a string!")
                         };
                     }
-                    assert_ne!(kv.ident.to_string(), "celeste_child_vec", "celeste_child_vec has no arguments!");
-                    assert_ne!(kv.ident.to_string(), "celeste_skip", "celeste_skip has no arguments!");
-                },
+                    assert_ne!(
+                        kv.ident.to_string(),
+                        "celeste_child_vec",
+                        "celeste_child_vec has no arguments!"
+                    );
+                    assert_ne!(
+                        kv.ident.to_string(),
+                        "celeste_skip",
+                        "celeste_skip has no arguments!"
+                    );
+                }
                 _ => {}
             }
         }
@@ -110,7 +166,13 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 if let Some(last) = match last {
                     Some(punctuated::Pair::Punctuated(segment, _)) => Some(segment),
                     Some(punctuated::Pair::End(segment)) => Some(segment),
-                    _ => if is_vec {panic!("A field with celeste_child_vec must have a type!")} else {None}
+                    _ => {
+                        if is_vec {
+                            panic!("A field with celeste_child_vec must have a type!")
+                        } else {
+                            None
+                        }
+                    }
                 } {
                     if last.ident.to_string() == "Option" {
                         is_opt = true;
@@ -137,13 +199,17 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                                 if !found_type {
                                     panic!("A field with celeste_child_vec's type must have a single generic argument!");
                                 }
-                            },
+                            }
                             _ => panic!("A field with celeste_child_vec's type must be generic!")
                         }
                     }
                 }
-            },
-            _ => if is_vec {panic!("A field with celeste_child_vec's type must be a normal type!")}
+            }
+            _ => {
+                if is_vec {
+                    panic!("A field with celeste_child_vec's type must be a normal type!")
+                }
+            }
         }
 
         if skip {
@@ -169,25 +235,31 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     }
 
     // prepend
-    let s_fields: Vec<Ident> = s_idents.iter()
-                                       .map(|e| Ident::new(format!("field_{}", e.to_string()).as_str(), e.span()))
-                                       .collect();
-    let s_vec_fields: Vec<Ident> = s_vec_idents.iter()
-                                               .map(|e| Ident::new(format!("field_{}", e.to_string()).as_str(), e.span()))
-                                               .collect();
+    let s_fields: Vec<Ident> = s_idents
+        .iter()
+        .map(|e| Ident::new(format!("field_{}", e.to_string()).as_str(), e.span()))
+        .collect();
+    let s_vec_fields: Vec<Ident> = s_vec_idents
+        .iter()
+        .map(|e| Ident::new(format!("field_{}", e.to_string()).as_str(), e.span()))
+        .collect();
 
-    let d_req_err_idents: Vec<Ident> = d_req_idents.iter()
-                                                   .map(|e| Ident::new(format!("_error_{}", e.to_string()).as_str(), e.span()))
-                                                   .collect();
-    let d_err_idents: Vec<Ident> = s_idents.iter()
-                                           .map(|e| Ident::new(format!("_error_{}", e.to_string()).as_str(), e.span()))
-                                           .collect();
-    let d_req_idents: Vec<Ident> = d_req_idents.iter()
-                                               .map(|e| Ident::new(format!("field_{}", e.to_string()).as_str(), e.span()))
-                                               .collect();
-    let d_opt_idents: Vec<Ident> = d_opt_idents.iter()
-                                               .map(|e| Ident::new(format!("field_{}", e.to_string()).as_str(), e.span()))
-                                               .collect();
+    let d_req_err_idents: Vec<Ident> = d_req_idents
+        .iter()
+        .map(|e| Ident::new(format!("_error_{}", e.to_string()).as_str(), e.span()))
+        .collect();
+    let d_err_idents: Vec<Ident> = s_idents
+        .iter()
+        .map(|e| Ident::new(format!("_error_{}", e.to_string()).as_str(), e.span()))
+        .collect();
+    let d_req_idents: Vec<Ident> = d_req_idents
+        .iter()
+        .map(|e| Ident::new(format!("field_{}", e.to_string()).as_str(), e.span()))
+        .collect();
+    let d_opt_idents: Vec<Ident> = d_opt_idents
+        .iter()
+        .map(|e| Ident::new(format!("field_{}", e.to_string()).as_str(), e.span()))
+        .collect();
 
     // errors
     let d_err_check_name = name.clone();
@@ -229,7 +301,9 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let s_vec_idents = s_vec_idents.iter();
 
     let d_skip_inits = d_skip_idents.map(|ident| quote! { #ident: Default::default() });
-    let d_field_inits = d_idents.zip(d_fields).map(|(ident, field)| quote! { #ident: #field });
+    let d_field_inits = d_idents
+        .zip(d_fields)
+        .map(|(ident, field)| quote! { #ident: #field });
     let d_inits = d_field_inits.chain(d_skip_inits);
 
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
@@ -293,7 +367,7 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                            <#d_vec_types_name as serialize::BinElType>::elem_name().map_or(true, |name| name == child.name) {
                             let maybe = <#d_vec_types_inner as serialize::BinElType>
                                 ::from_binel(serialize::BinElValue::Element(child.clone()));
-                            
+
                             if let Ok(elem) = maybe {
                                 #d_vec_idents_push.push(elem);
                             }

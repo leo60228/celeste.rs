@@ -13,18 +13,24 @@ pub enum BinElValue {
 pub trait BinElType: Sized {
     fn into_binel(self) -> BinElValue;
     fn from_binel(binel: BinElValue) -> Result<Self>;
-    fn maybe_attr() -> bool { true }
-    fn maybe_elem() -> bool { true }
-    fn elem_name() -> Option<&'static str> { None }
+    fn maybe_attr() -> bool {
+        true
+    }
+    fn maybe_elem() -> bool {
+        true
+    }
+    fn elem_name() -> Option<&'static str> {
+        None
+    }
 }
 
 macro_rules! impl_primitive {
-    ($attr:ident, $type:ident, $val:ident) => (
+    ($attr:ident, $type:ident, $val:ident) => {
         impl BinElType for $type {
             fn into_binel(self) -> BinElValue {
                 BinElValue::Attribute(BinElAttr::$attr($val::from(self)))
             }
-    
+
             #[allow(clippy::cast_lossless)]
             fn from_binel(binel: BinElValue) -> Result<Self> {
                 match binel {
@@ -33,9 +39,11 @@ macro_rules! impl_primitive {
                 }
             }
 
-            fn maybe_elem() -> bool { false }
+            fn maybe_elem() -> bool {
+                false
+            }
         }
-    )
+    };
 }
 
 impl_primitive!(Bool, bool, bool);
@@ -59,7 +67,9 @@ impl BinElType for BinEl {
         }
     }
 
-    fn maybe_attr() -> bool { false }
+    fn maybe_attr() -> bool {
+        false
+    }
 }
 
 impl BinElType for BinElAttr {
@@ -74,7 +84,9 @@ impl BinElType for BinElAttr {
         }
     }
 
-    fn maybe_elem() -> bool { false }
+    fn maybe_elem() -> bool {
+        false
+    }
 }
 
 impl<T: BinElType> BinElType for Option<T> {
@@ -92,7 +104,7 @@ impl<T: BinElType> BinElType for Option<T> {
 
 #[cfg(test)]
 mod test {
-    use crate::binel::serialize::{BinElValue, BinElType};
+    use crate::binel::serialize::{BinElType, BinElValue};
     use crate::binel::{BinEl, BinElAttr};
 
     #[derive(Eq, PartialEq, Debug, BinElType)]
@@ -150,7 +162,9 @@ mod test {
     }
 
     #[test]
-    fn serialize_empty() {create_empty();}
+    fn serialize_empty() {
+        create_empty();
+    }
 
     #[test]
     fn deserialize_empty() {
@@ -161,7 +175,7 @@ mod test {
     fn create_attr() -> BinEl {
         let number_field = -4;
 
-        let binel = match (OneField {number_field}).into_binel() {
+        let binel = match (OneField { number_field }).into_binel() {
             BinElValue::Element(elem) => elem,
             _ => panic!("Didn't get element!")
         };
@@ -179,19 +193,26 @@ mod test {
     }
 
     #[test]
-    fn serialize_attr() {create_attr();}
+    fn serialize_attr() {
+        create_attr();
+    }
 
     #[test]
     fn deserialize_attr() {
         let deserialized = OneField::from_binel(BinElValue::Element(create_attr()));
-        assert_eq!(deserialized.unwrap(), OneField {number_field: -4});
+        assert_eq!(deserialized.unwrap(), OneField { number_field: -4 });
     }
 
     fn create_renamed() -> BinEl {
         let orig_name: u8 = 255;
         let kept_name: u16 = 65535;
 
-        let binel = match (Renamed {orig_name, kept_name}).into_binel() {
+        let binel = match (Renamed {
+            orig_name,
+            kept_name
+        })
+        .into_binel()
+        {
             BinElValue::Element(elem) => elem,
             _ => panic!("Didn't get element!")
         };
@@ -200,7 +221,11 @@ mod test {
         assert_eq!(binel.children().count(), 0);
         assert_eq!(binel.attributes.len(), 2);
 
-        match binel.attributes.get("changed.field").expect("orig_name wasn't renamed!") {
+        match binel
+            .attributes
+            .get("changed.field")
+            .expect("orig_name wasn't renamed!")
+        {
             BinElAttr::Int(num) => assert_eq!(*num, orig_name as i32),
             _ => panic!("Didn't get int!")
         }
@@ -216,18 +241,29 @@ mod test {
     #[test]
     fn deserialize_renamed() {
         let deserialized = Renamed::from_binel(BinElValue::Element(create_renamed()));
-        assert_eq!(deserialized.unwrap(), Renamed {orig_name: 255, kept_name: 65535});
+        assert_eq!(
+            deserialized.unwrap(),
+            Renamed {
+                orig_name: 255,
+                kept_name: 65535
+            }
+        );
     }
 
     #[test]
-    fn serialize_renamed() {create_renamed();}
+    fn serialize_renamed() {
+        create_renamed();
+    }
 
     fn create_recursive() -> BinEl {
         let number_field = -4;
         let string_field = "Hello, world!";
 
-        let elem_field = OneField {number_field};
-        let rec = Recursive {elem_field, string_field: string_field.to_string()};
+        let elem_field = OneField { number_field };
+        let rec = Recursive {
+            elem_field,
+            string_field: string_field.to_string()
+        };
 
         let binel = match rec.into_binel() {
             BinElValue::Element(elem) => elem,
@@ -260,22 +296,28 @@ mod test {
     #[test]
     fn deserialize_recursive() {
         let deserialized = Recursive::from_binel(BinElValue::Element(create_recursive()));
-        assert_eq!(deserialized.unwrap(), Recursive {
-            string_field: "Hello, world!".to_string(),
-            elem_field: OneField {
-                number_field: -4
+        assert_eq!(
+            deserialized.unwrap(),
+            Recursive {
+                string_field: "Hello, world!".to_string(),
+                elem_field: OneField { number_field: -4 }
             }
-        });
+        );
     }
 
     #[test]
-    fn serialize_recursive() {create_recursive();}
+    fn serialize_recursive() {
+        create_recursive();
+    }
 
     fn create_child_vec() -> BinEl {
         let one_field = OneField { number_field: 5 };
         let vec = vec![one_field.clone(), one_field.clone(), one_field];
 
-        let obj = MultipleChildren { children: vec, child: EmptyMixedCase {} };
+        let obj = MultipleChildren {
+            children: vec,
+            child: EmptyMixedCase {}
+        };
 
         let binel = match obj.into_binel() {
             BinElValue::Element(elem) => elem,
@@ -294,46 +336,60 @@ mod test {
                 _ => panic!("Didn't get int!")
             }
         }
-        
+
         binel
     }
 
     #[test]
     fn deserialize_child_vec() {
         let deserialized = MultipleChildren::from_binel(BinElValue::Element(create_child_vec()));
-        assert_eq!(deserialized.unwrap(), MultipleChildren {
-            child: EmptyMixedCase {},
-            children: vec![
-                OneField { number_field: 5 },
-                OneField { number_field: 5 },
-                OneField { number_field: 5 }
-            ]
-        });
+        assert_eq!(
+            deserialized.unwrap(),
+            MultipleChildren {
+                child: EmptyMixedCase {},
+                children: vec![
+                    OneField { number_field: 5 },
+                    OneField { number_field: 5 },
+                    OneField { number_field: 5 }
+                ]
+            }
+        );
     }
 
     #[test]
-    fn serialize_child_vec() {create_child_vec();}
-    
+    fn serialize_child_vec() {
+        create_child_vec();
+    }
+
     fn create_optional_some() -> BinEl {
-        let binel = match (Optional { child: Some(EmptyMixedCase {}) }).into_binel() {
+        let binel = match (Optional {
+            child: Some(EmptyMixedCase {})
+        })
+        .into_binel()
+        {
             BinElValue::Element(elem) => elem,
             _ => panic!("Didn't get element!")
         };
 
         assert_eq!(binel.children().count(), 1);
         assert_eq!(binel.get("emptyMixedCase").len(), 1);
-        
+
         binel
     }
-    
+
     #[test]
-    fn serialize_optional_some() {create_optional_some();}
+    fn serialize_optional_some() {
+        create_optional_some();
+    }
 
     #[test]
     fn deserialize_optional_some() {
-        assert_eq!(Optional::from_binel(BinElValue::Element(create_optional_some())).unwrap(), Optional {
-            child: Some(EmptyMixedCase {})
-        });
+        assert_eq!(
+            Optional::from_binel(BinElValue::Element(create_optional_some())).unwrap(),
+            Optional {
+                child: Some(EmptyMixedCase {})
+            }
+        );
     }
 
     fn create_optional_none() -> BinEl {
@@ -343,45 +399,63 @@ mod test {
         };
 
         assert_eq!(binel.children().count(), 0);
-        
+
         binel
     }
-    
+
     #[test]
-    fn serialize_optional_none() {create_optional_none();}
+    fn serialize_optional_none() {
+        create_optional_none();
+    }
 
     #[test]
     fn deserialize_optional_none() {
-        assert_eq!(Optional::from_binel(BinElValue::Element(create_optional_none())).unwrap(), Optional {
-            child: None
-        });
+        assert_eq!(
+            Optional::from_binel(BinElValue::Element(create_optional_none())).unwrap(),
+            Optional { child: None }
+        );
     }
 
     fn create_skip() -> BinEl {
-        let binel = match (Skip { skipped: "hi".to_string(), kept: "bye".to_string() }).into_binel() {
+        let binel = match (Skip {
+            skipped: "hi".to_string(),
+            kept: "bye".to_string()
+        })
+        .into_binel()
+        {
             BinElValue::Element(elem) => elem,
             _ => panic!("Didn't get element!")
         };
 
         assert_eq!(binel.children().count(), 0);
         assert_eq!(binel.attributes.len(), 1);
-        assert_eq!(binel.attributes.get("kept").unwrap(), &BinElAttr::Text("bye".to_string()));
+        assert_eq!(
+            binel.attributes.get("kept").unwrap(),
+            &BinElAttr::Text("bye".to_string())
+        );
 
         binel
     }
 
     #[test]
-    fn serialize_skip() {create_skip();}
+    fn serialize_skip() {
+        create_skip();
+    }
 
     #[test]
     fn deserialize_skip() {
         let mut binel = create_skip();
 
-        binel.attributes.insert("skipped".to_string(), BinElAttr::Text("oh no!".to_string()));
+        binel
+            .attributes
+            .insert("skipped".to_string(), BinElAttr::Text("oh no!".to_string()));
 
-        assert_eq!(Skip::from_binel(BinElValue::Element(binel)).unwrap(), Skip {
-            skipped: Default::default(),
-            kept: "bye".to_string()
-        });
+        assert_eq!(
+            Skip::from_binel(BinElValue::Element(binel)).unwrap(),
+            Skip {
+                skipped: Default::default(),
+                kept: "bye".to_string()
+            }
+        );
     }
 }
