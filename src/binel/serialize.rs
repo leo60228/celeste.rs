@@ -19,12 +19,13 @@ pub trait BinElType: Sized {
 }
 
 macro_rules! impl_primitive {
-    ($attr:ident, $type:ty, $val:ty) => (
+    ($attr:ident, $type:ident, $val:ident) => (
         impl BinElType for $type {
             fn into_binel(self) -> BinElValue {
-                BinElValue::Attribute(BinElAttr::$attr(self as $val))
+                BinElValue::Attribute(BinElAttr::$attr($val::from(self)))
             }
     
+            #[allow(clippy::cast_lossless)]
             fn from_binel(binel: BinElValue) -> Result<Self> {
                 match binel {
                     BinElValue::Attribute(BinElAttr::$attr(e)) => Ok(e as $type),
