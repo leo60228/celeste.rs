@@ -40,7 +40,7 @@ jobs:
           displayName: Install Clippy
         - script: cargo clippy --all -- -D clippy::all
           displayName: Clippy
-        - script: rustup component add rustfmt --toolchain nightly
+        - script: rustup install nightly && rustup component add rustfmt --toolchain nightly
           displayName: Install Rustfmt
         - bash: cargo +nightly fmt --all -- --check && cd celeste_derive/ && cargo +nightly fmt --all -- --check
           displayName: Rustfmt
