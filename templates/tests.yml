@@ -4,7 +4,7 @@ parameters:
   clippy: false
 
 jobs:
-  - job: ${{ format('{0}_{1}', parameters.os, parameters.toolchain) }}
+  - job: ${{ format('{0}_{1}_clippy_{2}', parameters.os, parameters.toolchain, parameters.clippy) }}
     ${{ if not(parameters.clippy) }}:
       displayName: ${{ format('{0} with Rust {1}', parameters.os, parameters.toolchain) }} # 'vim oddity fix
     ${{ if parameters.clippy }}:
