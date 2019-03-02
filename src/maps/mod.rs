@@ -98,9 +98,8 @@ pub struct Level {
 
 #[derive(Clone, PartialEq, Debug, Default, BinElType)]
 pub struct Levels {
-    /*#[celeste_child_vec]
-    pub levels: Vec<Level>*/
-    pub level: Level
+    #[celeste_child_vec]
+    pub levels: Vec<Level>
 }
 
 #[derive(Clone, PartialEq, Debug, Default, BinElType)]
