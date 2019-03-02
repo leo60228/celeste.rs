@@ -36,7 +36,7 @@ jobs:
         - script: cargo test --all
           displayName: Tests
       - ${{ if eq(parameters.style, 'true') }}:
-        - script: rustup component add clippy
+        - script: rustup component add clippy || cargo install --git https://github.com/rust-lang/rust-clippy/ --force clippy
           displayName: Install Clippy
         - script: cargo clippy --all -- -D clippy::all
           displayName: Clippy
