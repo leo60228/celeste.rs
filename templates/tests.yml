@@ -36,6 +36,8 @@ jobs:
         - script: cargo test --all
           displayName: Tests
       - ${{ if eq(parameters.clippy, 'true') }}:
+        - script: rustup component add clippy
+          displayName: Install Clippy
         - script: cargo clippy --all
           displayName: Clippy
 
