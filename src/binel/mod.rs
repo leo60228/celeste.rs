@@ -11,7 +11,7 @@ pub mod writer;
 pub mod serialize;
 
 /// Holds `BinaryElement` files.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone, Default)]
 pub struct BinFile {
     pub package: String,
     pub root: BinEl,
@@ -27,7 +27,7 @@ pub enum BinElAttr {
 }
 
 /// An element stored in a `BinFile`. Based on XML.
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Default)]
 pub struct BinEl {
     /// The name of the `BinEl`.
     pub name: String,
