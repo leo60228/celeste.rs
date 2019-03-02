@@ -1,0 +1,39 @@
+jobs:
+  - template: templates/tests.yml
+  - template: templates/tests.yml
+    parameters:
+      toolchain: 'beta'
+  - template: templates/tests.yml
+    parameters:
+      toolchain: 'nightly'
+  - template: templates/tests.yml
+    parameters:
+      vmImage: 'vs2017-win2016'
+  - template: templates/tests.yml
+    parameters:
+      vmImage: 'vs2017-win2016'
+      toolchain: 'beta'
+  - template: templates/tests.yml
+    parameters:
+      vmImage: 'vs2017-win2016'
+      toolchain: 'nightly'
+  - template: templates/tests.yml
+    parameters:
+      vmImage: 'macos-10.13'
+  - template: templates/tests.yml
+    parameters:
+      vmImage: 'macos-10.13'
+      toolchain: 'beta'
+  - template: templates/tests.yml
+    parameters:
+      vmImage: 'macos-10.13'
+      toolchain: 'nightly'
+  - job: 'Clippy'
+    pool:
+      vmImage: 'ubuntu-16.04'
+    container: 'rust:latest'
+    steps:
+      - script: rustup component add clippy
+        displayName: Install Clippy
+      - script: cargo clippy --all
+        displayName: Clippy
