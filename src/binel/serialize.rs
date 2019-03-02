@@ -127,6 +127,13 @@ mod test {
         pub child: Option<EmptyMixedCase>
     }
 
+    #[derive(Eq, PartialEq, Debug, BinElType)]
+    struct Skip {
+        #[celeste_skip]
+        pub skipped: String,
+        pub kept: String
+    }
+
     fn create_empty() -> BinEl {
         let binel = match (EmptyMixedCase {}).into_binel() {
             BinElValue::Element(elem) => elem,
@@ -345,6 +352,34 @@ mod test {
     fn deserialize_optional_none() {
         assert_eq!(Optional::from_binel(BinElValue::Element(create_optional_none())), Some(Optional {
             child: None
+        }));
+    }
+
+    fn create_skip() -> BinEl {
+        let binel = match (Skip { skipped: "hi".to_string(), kept: "bye".to_string() }).into_binel() {
+            BinElValue::Element(elem) => elem,
+            _ => panic!("Didn't get element!")
+        };
+
+        assert_eq!(binel.children().count(), 0);
+        assert_eq!(binel.attributes.len(), 1);
+        assert_eq!(binel.attributes.get("kept").unwrap(), &BinElAttr::Text("bye".to_string()));
+
+        binel
+    }
+
+    #[test]
+    fn serialize_skip() {create_skip();}
+
+    #[test]
+    fn deserialize_skip() {
+        let mut binel = create_skip();
+
+        binel.attributes.insert("skipped".to_string(), BinElAttr::Text("oh no!".to_string()));
+
+        assert_eq!(Skip::from_binel(BinElValue::Element(binel)), Some(Skip {
+            skipped: Default::default(),
+            kept: "bye".to_string()
         }));
     }
 }

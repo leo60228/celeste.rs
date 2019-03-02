@@ -6,7 +6,7 @@ use quote::quote;
 use syn::*;
 use heck::MixedCase;
 
-#[proc_macro_derive(BinElType, attributes(celeste_child_vec, celeste_name))]
+#[proc_macro_derive(BinElType, attributes(celeste_child_vec, celeste_name, celeste_skip))]
 pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
@@ -19,10 +19,12 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             Ok(Meta::Word(word)) => {
                 assert_ne!(word.to_string(), "celeste_name", "celeste_name must have a value!");
                 assert_ne!(word.to_string(), "celeste_child_vec", "celeste_child_vec is only valid on fields!");
+                assert_ne!(word.to_string(), "celeste_skip", "celeste_skip is only valid on fields!");
             },
             Ok(Meta::List(list)) => {
                 assert_ne!(list.ident.to_string(), "celeste_name", "celeste_name must have a value!");
                 assert_ne!(list.ident.to_string(), "celeste_child_vec", "celeste_child_vec is only valid on fields!");
+                assert_ne!(list.ident.to_string(), "celeste_skip", "celeste_skip is only valid on fields!");
             },
             Ok(Meta::NameValue(kv)) => {
                 if kv.ident.to_string() == "celeste_name" {
@@ -32,6 +34,7 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                     };
                 }
                 assert_ne!(kv.ident.to_string(), "celeste_child_vec", "celeste_child_vec is only valid on fields!");
+                assert_ne!(kv.ident.to_string(), "celeste_skip", "celeste_skip is only valid on fields!");
             },
             _ => {}
         }
@@ -55,8 +58,10 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let mut d_vec_names = Vec::new();
     let mut d_req_idents = Vec::new();
     let mut d_opt_idents = Vec::new();
+    let mut d_skip_idents = Vec::new();
 
     for ref field in body.fields.iter() {
+        let mut skip = false;
         let mut is_vec = false;
         let ident = match &field.ident {
             &Some(ref ident) => ident.clone(),
@@ -69,11 +74,15 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                     if word.to_string() == "celeste_child_vec" {
                         is_vec = true;
                     }
+                    if word.to_string() == "celeste_skip" {
+                        skip = true;
+                    }
                     assert_ne!(word.to_string(), "celeste_name", "celeste_name must have a value!");
                 },
                 Ok(Meta::List(list)) => {
                     assert_ne!(list.ident.to_string(), "celeste_name", "celeste_name must have a value!");
                     assert_ne!(list.ident.to_string(), "celeste_child_vec", "celeste_child_vec has no arguments!");
+                    assert_ne!(list.ident.to_string(), "celeste_skip", "celeste_skip has no arguments!");
                 },
                 Ok(Meta::NameValue(kv)) => {
                     if kv.ident.to_string() == "celeste_name" {
@@ -83,6 +92,7 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                         };
                     }
                     assert_ne!(kv.ident.to_string(), "celeste_child_vec", "celeste_child_vec has no arguments!");
+                    assert_ne!(kv.ident.to_string(), "celeste_skip", "celeste_skip has no arguments!");
                 },
                 _ => {}
             }
@@ -135,7 +145,9 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             _ => if is_vec {panic!("A field with celeste_child_vec's type must be a normal type!")}
         }
 
-        if !is_vec {
+        if skip {
+            d_skip_idents.push(ident);
+        } else if !is_vec {
             if is_opt {
                 d_opt_idents.push(ident.clone());
             } else {
@@ -170,6 +182,7 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                                                .collect();
 
     // disable mutability and make into iterators
+    let d_skip_idents = d_skip_idents.iter();
     let d_idents_check = s_fields.iter();
     let d_idents_checked = s_fields.iter();
     let d_idents_continue = s_fields.iter();
@@ -193,6 +206,10 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let d_fields = s_fields.iter().chain(s_vec_fields.iter());
     let s_names = s_names.iter();
     let s_vec_idents = s_vec_idents.iter();
+
+    let d_skip_inits = d_skip_idents.map(|ident| quote! { #ident: Default::default() });
+    let d_field_inits = d_idents.zip(d_fields).map(|(ident, field)| quote! { #ident: #field });
+    let d_inits = d_field_inits.chain(d_skip_inits);
 
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
@@ -266,7 +283,7 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                     };
                 )*
 
-                let new: Self = Self { #(#d_idents: #d_fields),* };
+                let new: Self = Self { #(#d_inits),* };
 
                 Some(new)
             }
