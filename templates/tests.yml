@@ -3,12 +3,7 @@ parameters:
   vmImage: 'ubuntu-16.04'
 
 jobs:
-  - ${{ if eq(variables['Agent.OS'], 'Windows_NT') }}:
-      job: ${{ format('windows_{0}', parameters.toolchain) }}
-    ${{ if eq(variables['Agent.OS'], 'Linux') }}:
-      job: ${{ format('linux_{0}', parameters.toolchain) }}
-    ${{ if eq(variables['Agent.OS'], 'Darwin') }}:
-      job: ${{ format('macos_{0}', parameters.toolchain) }}
+  - job: ${{ format('{0}_{1}', variables['Agent.OS'], parameters.toolchain) }}
     displayName: ${{ format('{0} @ Rust {1}', parameters.vmImage, parameters.toolchain) }} # 'vim oddity fix
     variables:
       rustup_toolchain: ${{ parameters.toolchain }}
