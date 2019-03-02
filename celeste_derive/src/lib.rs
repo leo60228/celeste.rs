@@ -205,6 +205,7 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let d_idents_check = s_fields.iter();
     let d_idents_checked = s_fields.iter();
     let d_idents_continue = s_fields.iter();
+    let d_idents_done = s_fields.iter();
     let d_idents_attr = s_fields.iter();
     let d_idents_none = s_fields.iter();
     let d_names = s_names.iter();
@@ -216,6 +217,7 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let d_vec_idents = s_vec_fields.iter();
     let d_vec_idents_push = s_vec_fields.iter();
     let d_vec_types_name = d_vec_types_inner.iter();
+    let d_vec_types_maybe_elem = d_vec_types_inner.iter();
     let d_vec_types_inner = d_vec_types_inner.iter();
     let d_opt_idents_match = d_opt_idents.iter();
     let d_opt_idents = d_opt_idents.iter();
@@ -269,7 +271,8 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 for child in binel.drain() {
                     #(
                         if <#d_types_maybe_elem as serialize::BinElType>::maybe_elem() &&
-                           <#d_types_name as serialize::BinElType>::elem_name().map_or(true, |name| name == child.name) {
+                           <#d_types_name as serialize::BinElType>::elem_name().map_or(true, |name| name == child.name) &&
+                           #d_idents_done.is_none() {
                             let maybe = <#d_types as serialize::BinElType>
                                 ::from_binel(serialize::BinElValue::Element(child.clone()));
 
@@ -286,7 +289,8 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                         }
                     )*
                     #(
-                        if <#d_vec_types_name as serialize::BinElType>::elem_name().map_or(true, |name| name == child.name) {
+                        if <#d_vec_types_maybe_elem as serialize::BinElType>::maybe_elem() &&
+                           <#d_vec_types_name as serialize::BinElType>::elem_name().map_or(true, |name| name == child.name) {
                             let maybe = <#d_vec_types_inner as serialize::BinElType>
                                 ::from_binel(serialize::BinElValue::Element(child.clone()));
                             
