@@ -300,7 +300,7 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 #(
                     let #d_req_idents = match (#d_req_idents_check, #d_req_err_idents) {
                         (Some(val), _) => val,
-                        (None, None) => return Err(format!("Unable to parse {}!", #d_req_missing_names).into()),
+                        (None, None) => return Err(format!("Can't find {}!", #d_req_missing_names).into()),
                         (None, Some(err)) => return Err(Error::with_chain(err, format!("Unable to parse {}!", #d_req_err_names)))
                     };
                 )*
