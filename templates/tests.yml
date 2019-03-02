@@ -1,18 +1,18 @@
 parameters:
   toolchain: 'stable'
-  os: 'ubuntu'
+  os: 'Ubuntu'
 
 jobs:
   - job: ${{ format('{0}_{1}', parameters.os, parameters.toolchain) }}
-    displayName: ${{ format('{0} @ Rust {1}', parameters.vmImage, parameters.toolchain) }} # 'vim oddity fix
+    displayName: ${{ format('{0} with Rust {1}', parameters.os, parameters.toolchain) }} # 'vim oddity fix
     variables:
       rustup_toolchain: ${{ parameters.toolchain }}
     pool:
-      ${{ if eq(parameters.os, 'ubuntu') }}:
+      ${{ if eq(parameters.os, 'Ubuntu') }}:
         vmImage: 'ubuntu-16.04'
-      ${{ if eq(parameters.os, 'windows') }}:
+      ${{ if eq(parameters.os, 'Windows') }}:
         vmImage: 'vs2017-win2016'
-      ${{ if eq(parameters.os, 'macos') }}:
+      ${{ if eq(parameters.os, 'macOS') }}:
         vmImage: 'macos-10.13'
     steps:
       - ${{ if eq(variables['Agent.OS'], 'Windows_NT') }}:
