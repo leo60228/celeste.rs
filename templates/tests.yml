@@ -38,7 +38,7 @@ jobs:
       - ${{ if eq(parameters.clippy, 'true') }}:
         - script: rustup component add clippy
           displayName: Install Clippy
-        - script: cargo clippy --all
+        - script: cargo clippy --all -- -D clippy::all
           displayName: Clippy
 
     ${{ if eq(parameters.toolchain, 'nightly') }}:
