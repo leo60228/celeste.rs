@@ -1,4 +1,5 @@
 use super::*;
+use crate::Result;
 
 #[cfg(feature = "celeste_derive")]
 pub use celeste_derive::*;
@@ -11,7 +12,7 @@ pub enum BinElValue {
 
 pub trait BinElType: Sized {
     fn into_binel(self) -> BinElValue;
-    fn from_binel(binel: BinElValue) -> Option<Self>;
+    fn from_binel(binel: BinElValue) -> Result<Self>;
     fn maybe_attr() -> bool { true }
     fn maybe_elem() -> bool { true }
     fn elem_name() -> Option<&'static str> { None }
@@ -24,10 +25,10 @@ macro_rules! impl_primitive {
                 BinElValue::Attribute(BinElAttr::$attr(self as $val))
             }
     
-            fn from_binel(binel: BinElValue) -> Option<Self> {
+            fn from_binel(binel: BinElValue) -> Result<Self> {
                 match binel {
-                    BinElValue::Attribute(BinElAttr::$attr(e)) => Some(e as $type),
-                    _ => None
+                    BinElValue::Attribute(BinElAttr::$attr(e)) => Ok(e as $type),
+                    _ => Err("Not an attribute!".into())
                 }
             }
 
@@ -50,10 +51,10 @@ impl BinElType for BinEl {
         BinElValue::Element(self)
     }
 
-    fn from_binel(binel: BinElValue) -> Option<Self> {
+    fn from_binel(binel: BinElValue) -> Result<Self> {
         match binel {
-            BinElValue::Element(e) => Some(e),
-            _ => None
+            BinElValue::Element(e) => Ok(e),
+            _ => Err("Not an element!".into())
         }
     }
 
@@ -65,10 +66,10 @@ impl BinElType for BinElAttr {
         BinElValue::Attribute(self)
     }
 
-    fn from_binel(binel: BinElValue) -> Option<Self> {
+    fn from_binel(binel: BinElValue) -> Result<Self> {
         match binel {
-            BinElValue::Attribute(e) => Some(e),
-            _ => None
+            BinElValue::Attribute(e) => Ok(e),
+            _ => Err("Not an attribute!".into())
         }
     }
 
@@ -83,8 +84,8 @@ impl<T: BinElType> BinElType for Option<T> {
         }
     }
 
-    fn from_binel(binel: BinElValue) -> Option<Self> {
-        Some(T::from_binel(binel))
+    fn from_binel(binel: BinElValue) -> Result<Self> {
+        Ok(T::from_binel(binel).ok())
     }
 }
 
@@ -153,7 +154,7 @@ mod test {
     #[test]
     fn deserialize_empty() {
         let deserialized = EmptyMixedCase::from_binel(BinElValue::Element(create_empty()));
-        assert_eq!(deserialized, Some(EmptyMixedCase {}));
+        assert_eq!(deserialized.unwrap(), EmptyMixedCase {});
     }
 
     fn create_attr() -> BinEl {
@@ -182,7 +183,7 @@ mod test {
     #[test]
     fn deserialize_attr() {
         let deserialized = OneField::from_binel(BinElValue::Element(create_attr()));
-        assert_eq!(deserialized, Some(OneField {number_field: -4}));
+        assert_eq!(deserialized.unwrap(), OneField {number_field: -4});
     }
 
     fn create_renamed() -> BinEl {
@@ -214,7 +215,7 @@ mod test {
     #[test]
     fn deserialize_renamed() {
         let deserialized = Renamed::from_binel(BinElValue::Element(create_renamed()));
-        assert_eq!(deserialized, Some(Renamed {orig_name: 255, kept_name: 65535}));
+        assert_eq!(deserialized.unwrap(), Renamed {orig_name: 255, kept_name: 65535});
     }
 
     #[test]
@@ -258,12 +259,12 @@ mod test {
     #[test]
     fn deserialize_recursive() {
         let deserialized = Recursive::from_binel(BinElValue::Element(create_recursive()));
-        assert_eq!(deserialized, Some(Recursive {
+        assert_eq!(deserialized.unwrap(), Recursive {
             string_field: "Hello, world!".to_string(),
             elem_field: OneField {
                 number_field: -4
             }
-        }));
+        });
     }
 
     #[test]
@@ -299,14 +300,14 @@ mod test {
     #[test]
     fn deserialize_child_vec() {
         let deserialized = MultipleChildren::from_binel(BinElValue::Element(create_child_vec()));
-        assert_eq!(deserialized, Some(MultipleChildren {
+        assert_eq!(deserialized.unwrap(), MultipleChildren {
             child: EmptyMixedCase {},
             children: vec![
                 OneField { number_field: 5 },
                 OneField { number_field: 5 },
                 OneField { number_field: 5 }
             ]
-        }));
+        });
     }
 
     #[test]
@@ -329,9 +330,9 @@ mod test {
 
     #[test]
     fn deserialize_optional_some() {
-        assert_eq!(Optional::from_binel(BinElValue::Element(create_optional_some())), Some(Optional {
+        assert_eq!(Optional::from_binel(BinElValue::Element(create_optional_some())).unwrap(), Optional {
             child: Some(EmptyMixedCase {})
-        }));
+        });
     }
 
     fn create_optional_none() -> BinEl {
@@ -350,9 +351,9 @@ mod test {
 
     #[test]
     fn deserialize_optional_none() {
-        assert_eq!(Optional::from_binel(BinElValue::Element(create_optional_none())), Some(Optional {
+        assert_eq!(Optional::from_binel(BinElValue::Element(create_optional_none())).unwrap(), Optional {
             child: None
-        }));
+        });
     }
 
     fn create_skip() -> BinEl {
@@ -377,9 +378,9 @@ mod test {
 
         binel.attributes.insert("skipped".to_string(), BinElAttr::Text("oh no!".to_string()));
 
-        assert_eq!(Skip::from_binel(BinElValue::Element(binel)), Some(Skip {
+        assert_eq!(Skip::from_binel(BinElValue::Element(binel)).unwrap(), Skip {
             skipped: Default::default(),
             kept: "bye".to_string()
-        }));
+        });
     }
 }

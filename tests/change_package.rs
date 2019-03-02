@@ -1,8 +1,6 @@
-#[macro_use]
-extern crate log;
-extern crate env_logger;
 use std::io::Cursor;
 use celeste::*;
+use log::*;
 
 #[test]
 fn change_package() {

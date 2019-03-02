@@ -57,6 +57,7 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let mut d_vec_types_inner = Vec::new();
     let mut d_vec_names = Vec::new();
     let mut d_req_idents = Vec::new();
+    let mut d_req_err_names = Vec::new();
     let mut d_opt_idents = Vec::new();
     let mut d_skip_idents = Vec::new();
 
@@ -152,6 +153,7 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 d_opt_idents.push(ident.clone());
             } else {
                 d_req_idents.push(ident.clone());
+                d_req_err_names.push(name.clone());
             }
 
             s_idents.push(ident);
@@ -166,7 +168,7 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         }
     }
 
-    // prepend "field_"
+    // prepend
     let s_fields: Vec<Ident> = s_idents.iter()
                                        .map(|e| Ident::new(format!("field_{}", e.to_string()).as_str(), e.span()))
                                        .collect();
@@ -174,12 +176,29 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                                                .map(|e| Ident::new(format!("field_{}", e.to_string()).as_str(), e.span()))
                                                .collect();
 
+    let d_req_err_idents: Vec<Ident> = d_req_idents.iter()
+                                                   .map(|e| Ident::new(format!("_error_{}", e.to_string()).as_str(), e.span()))
+                                                   .collect();
+    let d_err_idents: Vec<Ident> = s_idents.iter()
+                                           .map(|e| Ident::new(format!("_error_{}", e.to_string()).as_str(), e.span()))
+                                           .collect();
     let d_req_idents: Vec<Ident> = d_req_idents.iter()
                                                .map(|e| Ident::new(format!("field_{}", e.to_string()).as_str(), e.span()))
                                                .collect();
     let d_opt_idents: Vec<Ident> = d_opt_idents.iter()
                                                .map(|e| Ident::new(format!("field_{}", e.to_string()).as_str(), e.span()))
                                                .collect();
+
+    // errors
+    let d_err_check_name = name.clone();
+    let d_err_elem_name = name.clone();
+    let d_err_names = s_names.iter();
+    let d_req_missing_names = d_req_err_names.iter();
+    let d_req_err_names = d_req_err_names.iter();
+    let d_maybe_err_idents = d_err_idents.iter();
+    let d_is_attr_err_idents = d_err_idents.iter();
+    let d_is_elem_err_idents = d_err_idents.iter();
+    let d_req_err_idents = d_req_err_idents.iter();
 
     // disable mutability and make into iterators
     let d_skip_idents = d_skip_idents.iter();
@@ -215,24 +234,29 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
     let output = quote! {
         impl #impl_generics ::celeste::binel::serialize::BinElType for #ident #ty_generics #where_clause {
-            fn from_binel(mut binel: ::celeste::binel::serialize::BinElValue) -> Option<Self> {
+            fn from_binel(binel: ::celeste::binel::serialize::BinElValue) -> ::celeste::Result<Self> {
                 use ::celeste::binel::*;
+                use ::celeste::Error;
 
                 let mut binel = match binel {
                     serialize::BinElValue::Element(elem) => elem,
-                    _ => return None
+                    _ => return Err(format!("{} isn't an element!", #d_err_elem_name).into())
                 };
 
                 if binel.name != #check_name {
-                    return None;
+                    return Err(format!("Got wrong name! {} != {}", binel.name, #d_err_check_name).into());
                 }
 
                 #(
                     let mut #d_idents_none = None;
+                    let mut #d_maybe_err_idents = None;
 
                     if <#d_types_maybe_attr as serialize::BinElType>::maybe_attr() {
                         #d_idents_attr = match binel.attributes.remove(#d_names) {
-                            Some(attr) => <#d_types_attr as serialize::BinElType>::from_binel(serialize::BinElValue::Attribute(attr)),
+                            Some(attr) => match <#d_types_attr as serialize::BinElType>::from_binel(serialize::BinElValue::Attribute(attr)) {
+                                Ok(val) => Some(val),
+                                Err(err) => {#d_is_attr_err_idents = Some(err); None}
+                            },
                             None => None
                         };
                     }
@@ -250,10 +274,10 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                                 ::from_binel(serialize::BinElValue::Element(child.clone()));
 
                             #d_idents_checked = match (#d_idents_check, maybe) {
-                                (Some(_), Some(_)) => return None,
-                                (Some(attr), None) => Some(attr),
-                                (None, Some(child)) => Some(child),
-                                (None, None) => None
+                                (Some(_), Ok(_)) => return Err(format!("Not sure if {} is attribute or element!", #d_err_names).into()),
+                                (Some(attr), Err(_)) => Some(attr),
+                                (None, Ok(child)) => Some(child),
+                                (None, Err(err)) => {#d_is_elem_err_idents = Some(err); None}
                             };
 
                             if #d_idents_continue.is_some() {
@@ -266,7 +290,7 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                             let maybe = <#d_vec_types_inner as serialize::BinElType>
                                 ::from_binel(serialize::BinElValue::Element(child.clone()));
                             
-                            if let Some(elem) = maybe {
+                            if let Ok(elem) = maybe {
                                 #d_vec_idents_push.push(elem);
                             }
                         }
@@ -274,7 +298,11 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 }
 
                 #(
-                    let #d_req_idents = #d_req_idents_check?;
+                    let #d_req_idents = match (#d_req_idents_check, #d_req_err_idents) {
+                        (Some(val), _) => val,
+                        (None, None) => return Err(format!("Unable to parse {}!", #d_req_missing_names).into()),
+                        (None, Some(err)) => return Err(Error::with_chain(err, format!("Unable to parse {}!", #d_req_err_names)))
+                    };
                 )*
                 #(
                     let #d_opt_idents = match #d_opt_idents_match {
@@ -285,7 +313,7 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
                 let new: Self = Self { #(#d_inits),* };
 
-                Some(new)
+                Ok(new)
             }
 
             fn into_binel(self) -> ::celeste::binel::serialize::BinElValue {
