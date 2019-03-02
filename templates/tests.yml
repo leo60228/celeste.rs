@@ -36,13 +36,13 @@ jobs:
         - script: cargo test --all
           displayName: Tests
       - ${{ if eq(parameters.style, 'true') }}:
-        - script: rustup component add clippy || cargo install --git https://github.com/rust-lang/rust-clippy/ --force clippy
+        - script: rustup component add clippy
           displayName: Install Clippy
         - script: cargo clippy --all -- -D clippy::all
           displayName: Clippy
-        - script: rustup component add rustfmt
+        - script: rustup component add rustfmt --toolchain nightly
           displayName: Install Rustfmt
-        - bash: cargo fmt --all -- --check && cd celeste_derive/ && cargo fmt --all -- --check
+        - bash: cargo +nightly fmt --all -- --check && cd celeste_derive/ && cargo +nightly fmt --all -- --check
           displayName: Rustfmt
 
     ${{ if eq(parameters.toolchain, 'nightly') }}:
