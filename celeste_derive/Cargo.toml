@@ -1,6 +1,6 @@
 [package]
 name = "celeste_derive"
-version = "0.1.0"
+version = "1.0.0"
 authors = ["leo60228 <iakornfeld@gmail.com>"]
 edition = "2018"
 description = "Helper crate for `celeste`. Should not be used directly; starting in Rust 2018, you can just use `celeste` instead."
