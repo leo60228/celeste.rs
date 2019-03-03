@@ -148,6 +148,9 @@ mod test {
         pub kept: String
     }
 
+    #[derive(PartialEq, Debug, Clone, BinElType)]
+    struct Newtype(pub BinEl);
+
     fn create_empty() -> BinEl {
         let binel = match (EmptyMixedCase {}).into_binel() {
             BinElValue::Element(elem) => elem,
@@ -457,5 +460,31 @@ mod test {
                 kept: "bye".to_string()
             }
         );
+    }
+
+    fn create_newtype() -> (BinEl, Newtype) {
+        let mut binel = BinEl::new("newtype");
+        binel.insert(create_recursive());
+        binel.attributes.insert("test".to_string(), BinElAttr::Int(5));
+        let newtype = Newtype(binel.clone());
+        let elem = match newtype.clone().into_binel() {
+            BinElValue::Element(elem) => elem,
+            _ => panic!("Didn't get element!")
+        };
+        assert_eq!(elem, binel);
+        assert_eq!(elem, newtype.0);
+        (binel, newtype)
+    }
+
+    #[test]
+    fn serialize_newtype() {
+        create_newtype();
+    }
+
+    #[test]
+    fn deserialize_newtype() {
+        let (binel, newtype) = create_newtype();
+        let deserialized = Newtype::from_binel(BinElValue::Element(binel));
+        assert_eq!(deserialized.unwrap(), newtype);
     }
 }
