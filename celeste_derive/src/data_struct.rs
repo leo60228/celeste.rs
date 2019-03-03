@@ -303,6 +303,7 @@ pub(crate) fn binel_type_struct(input: DeriveInput, name: String) -> proc_macro:
 
                             if let Ok(elem) = maybe {
                                 #d_vec_idents_push.push(elem);
+                                continue;
                             }
                         }
                     )*
