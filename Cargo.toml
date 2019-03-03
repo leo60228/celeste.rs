@@ -23,11 +23,11 @@ itertools = "0.8.0"
 error-chain = "0.12.0"
 
 [dependencies.celeste_derive]
-version = "1.0.0"
+version = "1.0.1-alpha.0"
 optional = true
 
-#[patch.crates-io]
-#celeste_derive = { path = "./celeste_derive" }
+[patch.crates-io]
+celeste_derive = { path = "./celeste_derive" }
 
 [dev-dependencies]
 env_logger = { version = "0.6.0", default-features = false }
