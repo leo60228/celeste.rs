@@ -465,7 +465,9 @@ mod test {
     fn create_newtype() -> (BinEl, Newtype) {
         let mut binel = BinEl::new("newtype");
         binel.insert(create_recursive());
-        binel.attributes.insert("test".to_string(), BinElAttr::Int(5));
+        binel
+            .attributes
+            .insert("test".to_string(), BinElAttr::Int(5));
         let newtype = Newtype(binel.clone());
         let elem = match newtype.clone().into_binel() {
             BinElValue::Element(elem) => elem,

@@ -17,7 +17,9 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let mut name = ident.to_string().to_mixed_case();
 
     let is_newtype = match &input.data {
-        Data::Struct(data) => data.fields.iter().count() == 1 && data.fields.iter().all(|field| field.ident == None),
+        Data::Struct(data) => {
+            data.fields.iter().count() == 1 && data.fields.iter().all(|field| field.ident == None)
+        }
         _ => false
     };
 
