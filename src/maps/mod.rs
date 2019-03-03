@@ -10,11 +10,11 @@ pub struct Stylegrounds {
 
 #[derive(Clone, PartialEq, Debug, Default, BinElType)]
 #[celeste_name = "Foregrounds"]
-pub struct Foregrounds {}
+pub struct Foregrounds(BinEl);
 
 #[derive(Clone, PartialEq, Debug, Default, BinElType)]
 #[celeste_name = "Backgrounds"]
-pub struct Backgrounds {}
+pub struct Backgrounds(BinEl);
 
 #[derive(Clone, PartialEq, Debug, Default, BinElType)]
 #[celeste_name = "bgtiles"]
@@ -66,8 +66,18 @@ pub struct Triggers {
 }
 
 #[derive(Clone, PartialEq, Debug, Default, BinElType)]
+pub struct ObjTiles {
+    #[celeste_name = "innerText"]
+    pub tiles: String
+}
+
+#[derive(Clone, PartialEq, Debug, Default, BinElType)]
 #[celeste_name = "Filler"]
-pub struct Filler {} // TODO: parse filler
+pub struct Filler(BinEl); // TODO: parse filler
+
+/// Undocumented (apart from source) Everest extension.
+#[derive(Clone, PartialEq, Debug, Default, BinElType)]
+pub struct Meta(BinEl);
 
 #[derive(Clone, PartialEq, Debug, Default, BinElType)]
 pub struct Level {
@@ -90,16 +100,25 @@ pub struct Level {
     pub wind_pattern: String,
     pub disable_down_transition: bool,
     pub dark: bool,
+    pub fgdecals: FGDecals,
+    pub bgdecals: BGDecals,
     pub fgtiles: FGTiles,
     pub bgtiles: BGTiles,
     pub solids: Solids,
-    pub bg: BGSolids
+    pub bg: BGSolids,
+    pub entities: Entities,
+    pub triggers: Triggers,
+    pub objtiles: Option<ObjTiles>,
+    #[celeste_child_vec]
+    pub invalid: Vec<BinEl>
 }
 
 #[derive(Clone, PartialEq, Debug, Default, BinElType)]
 pub struct Levels {
     #[celeste_child_vec]
-    pub levels: Vec<Level>
+    pub levels: Vec<Level>,
+    #[celeste_child_vec]
+    pub invalid_levels: Vec<BinEl>
 }
 
 #[derive(Clone, PartialEq, Debug, Default, BinElType)]
@@ -107,7 +126,8 @@ pub struct Levels {
 pub struct Map {
     pub style: Stylegrounds,
     pub levels: Levels,
-    pub filler: Filler
+    pub filler: Filler,
+    pub meta: Option<Meta>
 }
 
 pub struct MapFile {
