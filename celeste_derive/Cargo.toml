@@ -18,5 +18,5 @@ heck = "0.3.1"
 
 [dev-dependencies.celeste]
 path = ".."
-version = "1.0.1"
+version = "2.0.1-alpha.0"
 default-features = false
