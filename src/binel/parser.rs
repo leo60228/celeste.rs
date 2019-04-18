@@ -50,7 +50,7 @@ pub fn take_rle_string(buf: &[u8]) -> IResult<&[u8], String> {
 ///
 /// assert_eq!(parser::take_elemattr(b"\x01\x05", &[]), Ok((&b""[..], BinElAttr::Int(5))));
 /// ```
-#[allow(clippy::cyclomatic_complexity)]
+#[allow(clippy::cognitive_complexity)]
 pub fn take_elemattr<'a>(buf: &'a [u8], lookup: &[String]) -> IResult<&'a [u8], BinElAttr> {
     debug!("taking attribute (type {})", buf[0]);
     do_parse!(
