@@ -55,15 +55,15 @@ pub struct BGSolids {
 #[derive(Clone, PartialEq, Debug, Default, BinElType)]
 pub struct Decal {
     /// The pixel (8 per tile) location in the `Level`.
-    x: i32,
+    pub x: i32,
     /// The pixel (8 per tile) location in the `Level`.
-    y: i32,
+    pub y: i32,
     /// Horizontal stretching of the `Decal`.
-    scale_x: i32,
+    pub scale_x: i32,
     /// Vertical stretching of the `Decal`.
-    scale_y: i32,
+    pub scale_y: i32,
     /// The texture of the `Decal`, within the Gameplay atlas.
-    texture: String
+    pub texture: String
 }
 
 /// Background decals, or image assets in a `Level`.
