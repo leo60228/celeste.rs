@@ -12,12 +12,12 @@ pub struct Stylegrounds {
 /// Foreground stylegrounds. Currently not deserialized, instead just being a newtype over `BinEl`.
 #[derive(Clone, PartialEq, Debug, Default, BinElType)]
 #[celeste_name = "Foregrounds"]
-pub struct Foregrounds(BinEl);
+pub struct Foregrounds(pub BinEl);
 
 /// Background stylegrounds. Currently not deserialized, instead just being a newtype over `BinEl`.
 #[derive(Clone, PartialEq, Debug, Default, BinElType)]
 #[celeste_name = "Backgrounds"]
-pub struct Backgrounds(BinEl);
+pub struct Backgrounds(pub BinEl);
 
 /// The tilesets used in the `Level`'s background.
 #[derive(Clone, PartialEq, Debug, Default, BinElType)]
@@ -118,11 +118,11 @@ pub struct ObjTiles {
 /// behavior shouldn't change if you remove these.
 #[derive(Clone, PartialEq, Debug, Default, BinElType)]
 #[celeste_name = "Filler"]
-pub struct Filler(BinEl); // TODO: parse filler
+pub struct Filler(pub BinEl); // TODO: parse filler
 
 /// Undocumented (apart from source) Everest extension, for storing the `Map`'s name and icon.
 #[derive(Clone, PartialEq, Debug, Default, BinElType)]
-pub struct Meta(BinEl);
+pub struct Meta(pub BinEl);
 
 /// A room in a `Map`. Only confusingly named fields are documented.
 #[derive(Clone, PartialEq, Debug, Default, BinElType)]
