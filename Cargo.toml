@@ -13,7 +13,7 @@ default = ["derive"]
 derive = ["celeste_derive"]
 
 [dependencies]
-nom = "^4.1"
+nom = "^5.0"
 nom-varint = "0.1.0"
 unsigned-varint = "0.2.2"
 lazy_static = "1.2.0"
