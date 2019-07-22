@@ -73,28 +73,16 @@ pub fn take_elemattr<'a: 'b, 'b>(
             tag(b"\x02"),
             map(le_i16, |word: i16| BinElAttr::Int(i32::from(word)))
         ),
-        preceded(
-            tag(b"\x03"),
-            map(le_i32, |dword: i32| BinElAttr::Int(i32::from(dword)))
-        ),
-        preceded(
-            tag(b"\x04"),
-            map(le_f32, |float: f32| BinElAttr::Float(float))
-        ),
+        preceded(tag(b"\x03"), map(le_i32, BinElAttr::Int)),
+        preceded(tag(b"\x04"), map(le_f32, BinElAttr::Float)),
         preceded(
             tag(b"\x05"),
             map(take_lookup(lookup), |string: &String| {
                 BinElAttr::Text(string.clone())
             })
         ),
-        preceded(
-            tag(b"\x06"),
-            map(take_string, |string: String| BinElAttr::Text(string))
-        ),
-        preceded(
-            tag(b"\x07"),
-            map(take_rle_string, |string: String| BinElAttr::Text(string))
-        )
+        preceded(tag(b"\x06"), map(take_string, BinElAttr::Text)),
+        preceded(tag(b"\x07"), map(take_rle_string, BinElAttr::Text))
     ))
 }
 
