@@ -14,7 +14,7 @@ derive = ["celeste_derive"]
 
 [dependencies]
 nom = "^4.1"
-nom-varint = "0.1.0"
+nom-varint = "0.2.0"
 unsigned-varint = "0.2.2"
 lazy_static = "1.2.0"
 log = "0.4.0"
