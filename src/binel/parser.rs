@@ -6,7 +6,7 @@ use nom::combinator::map;
 use nom::multi::count;
 use nom::number::complete::*;
 use nom::sequence::preceded;
-use nom::*;
+use nom::{take_str, IResult};
 use nom_varint::take_varint;
 
 /// Take a string with the length being a varint.
