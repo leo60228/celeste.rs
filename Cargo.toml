@@ -1,6 +1,6 @@
 [package]
 name = "celeste"
-version = "2.0.2-alpha.0"
+version = "3.0.0-alpha.0"
 authors = ["leo60228 <iakornfeld@gmail.com>"]
 edition = "2018"
 description = "Crate for formats from the 2018 game Celeste."
@@ -23,11 +23,9 @@ itertools = "0.8.0"
 error-chain = "0.12.0"
 
 [dependencies.celeste_derive]
-version = "1.0.0"
+version = "2.0.0-alpha.0"
+path = "celeste_derive"
 optional = true
-
-[patch.crates-io]
-celeste_derive = { path = "./celeste_derive" }
 
 [dev-dependencies]
 env_logger = { version = "0.6.0", default-features = false }
