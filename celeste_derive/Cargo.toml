@@ -12,7 +12,7 @@ repository = "https://github.com/leo60228/celesters"
 proc-macro = true
 
 [dependencies]
-syn = "0.15.26"
+syn = "1.0.0"
 quote = "0.6.11"
 heck = "0.3.1"
 
