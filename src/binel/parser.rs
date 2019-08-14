@@ -27,7 +27,7 @@ pub fn take_string(buf: &[u8]) -> IResult<&[u8], String> {
 
 /// Lookup a u16 from a `&[u8]` in a string lookup table.
 pub fn take_lookup<'a: 'b, 'b>(
-    lookup: &'b [String]
+    lookup: &'b [String],
 ) -> impl Fn(&'a [u8]) -> IResult<&'a [u8], &'b String> + 'b {
     map(le_u16, move |index| &lookup[index as usize])
 }
@@ -55,23 +55,24 @@ pub fn take_rle_string(buf: &[u8]) -> IResult<&[u8], String> {
 /// assert_eq!(parser::take_elemattr(&[])(b"\x01\x05"), Ok((&b""[..], BinElAttr::Int(5))));
 /// ```
 #[allow(clippy::unknown_clippy_lints)]
+#[allow(renamed_and_removed_lints)]
 #[allow(clippy::cognitive_complexity)]
 #[allow(clippy::cyclomatic_complexity)]
 pub fn take_elemattr<'a: 'b, 'b>(
-    lookup: &'b [String]
+    lookup: &'b [String],
 ) -> impl Fn(&'a [u8]) -> IResult<&'a [u8], BinElAttr> + 'b {
     alt((
         preceded(
             tag(b"\x00"),
-            map(le_u8, |byte: u8| BinElAttr::Bool(byte != 0))
+            map(le_u8, |byte: u8| BinElAttr::Bool(byte != 0)),
         ),
         preceded(
             tag(b"\x01"),
-            map(le_u8, |byte: u8| BinElAttr::Int(i32::from(byte)))
+            map(le_u8, |byte: u8| BinElAttr::Int(i32::from(byte))),
         ),
         preceded(
             tag(b"\x02"),
-            map(le_i16, |word: i16| BinElAttr::Int(i32::from(word)))
+            map(le_i16, |word: i16| BinElAttr::Int(i32::from(word))),
         ),
         preceded(tag(b"\x03"), map(le_i32, BinElAttr::Int)),
         preceded(tag(b"\x04"), map(le_f32, BinElAttr::Float)),
@@ -79,16 +80,16 @@ pub fn take_elemattr<'a: 'b, 'b>(
             tag(b"\x05"),
             map(take_lookup(lookup), |string: &String| {
                 BinElAttr::Text(string.clone())
-            })
+            }),
         ),
         preceded(tag(b"\x06"), map(take_string, BinElAttr::Text)),
-        preceded(tag(b"\x07"), map(take_rle_string, BinElAttr::Text))
+        preceded(tag(b"\x07"), map(take_rle_string, BinElAttr::Text)),
     ))
 }
 
 /// Parse a `BinEl` from a `&[u8]`. Tested solely in integration tests due to complexity.
 pub fn take_element<'a: 'b, 'b>(
-    lookup: &'b [String]
+    lookup: &'b [String],
 ) -> impl Fn(&'a [u8]) -> IResult<&'a [u8], BinEl> + 'b {
     move |buf| {
         debug!("taking element");

@@ -14,7 +14,7 @@ pub mod serialize;
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct BinFile {
     pub package: String,
-    pub root: BinEl
+    pub root: BinEl,
 }
 
 /// A value stored in an attribute inside a `BinEl`. Unlike XML, attributes are strongly typed.
@@ -23,7 +23,7 @@ pub enum BinElAttr {
     Bool(bool),
     Int(i32),
     Float(f32),
-    Text(String)
+    Text(String),
 }
 
 /// An element stored in a `BinFile`. Based on XML.
@@ -33,7 +33,7 @@ pub struct BinEl {
     pub name: String,
     /// All attributes of the `BinEl`. Unlike XML, these are strongly typed.
     pub attributes: HashMap<String, BinElAttr>,
-    children: HashMap<String, Vec<BinEl>>
+    children: HashMap<String, Vec<BinEl>>,
 }
 
 lazy_static! {
@@ -47,7 +47,7 @@ impl BinEl {
         Self {
             name: name.to_string(),
             children: HashMap::new(),
-            attributes: HashMap::new()
+            attributes: HashMap::new(),
         }
     }
 
@@ -56,7 +56,7 @@ impl BinEl {
     pub fn text(&self) -> Option<&String> {
         match self.attributes.get("innerText")? {
             BinElAttr::Text(text) => Some(&text),
-            _ => None
+            _ => None,
         }
     }
 
@@ -65,7 +65,7 @@ impl BinEl {
     pub fn text_mut(&mut self) -> Option<&mut String> {
         match self.attributes.get_mut("innerText")? {
             BinElAttr::Text(ref mut text) => Some(text),
-            _ => None
+            _ => None,
         }
     }
 
@@ -123,7 +123,7 @@ mod test {
     fn insert_child() {
         let mut file = BinFile {
             package: "pkg".to_string(),
-            root: BinEl::new("root")
+            root: BinEl::new("root"),
         };
         file.root.insert(BinEl::new("one"));
         file.root.insert(BinEl::new("two"));
@@ -134,7 +134,7 @@ mod test {
         let empty_binel: Vec<BinEl> = vec![];
         let mut file = BinFile {
             package: "pkg".to_string(),
-            root: BinEl::new("root")
+            root: BinEl::new("root"),
         };
         file.root.insert(BinEl::new("one"));
         file.root.insert(BinEl::new("two"));

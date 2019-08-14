@@ -8,7 +8,7 @@ pub use celeste_derive::*;
 pub enum BinElValue {
     Attribute(BinElAttr),
     Element(BinEl),
-    None
+    None,
 }
 
 /// A type that can be serialized to and from a `BinEl`.
@@ -61,7 +61,7 @@ macro_rules! impl_primitive {
             fn from_binel(binel: BinElValue) -> Result<Self> {
                 match binel {
                     BinElValue::Attribute(BinElAttr::$attr(e)) => Ok(e as $type),
-                    _ => Err("Not an attribute!".into())
+                    _ => Err("Not an attribute!".into()),
                 }
             }
 
@@ -89,7 +89,7 @@ impl BinElType for BinEl {
     fn from_binel(binel: BinElValue) -> Result<Self> {
         match binel {
             BinElValue::Element(e) => Ok(e),
-            _ => Err("Not an element!".into())
+            _ => Err("Not an element!".into()),
         }
     }
 
@@ -106,7 +106,7 @@ impl BinElType for BinElAttr {
     fn from_binel(binel: BinElValue) -> Result<Self> {
         match binel {
             BinElValue::Attribute(e) => Ok(e),
-            _ => Err("Not an attribute!".into())
+            _ => Err("Not an attribute!".into()),
         }
     }
 
@@ -119,7 +119,7 @@ impl<T: BinElType> BinElType for Option<T> {
     fn into_binel(self) -> BinElValue {
         match self {
             Some(inner) => inner.into_binel(),
-            None => BinElValue::None
+            None => BinElValue::None,
         }
     }
 
@@ -138,13 +138,13 @@ mod test {
 
     #[derive(Eq, PartialEq, Debug, BinElType, Clone)]
     struct OneField {
-        pub number_field: i16
+        pub number_field: i16,
     }
 
     #[derive(Eq, PartialEq, Debug, BinElType)]
     struct Recursive {
         pub elem_field: OneField,
-        pub string_field: String
+        pub string_field: String,
     }
 
     #[derive(Eq, PartialEq, Debug, BinElType)]
@@ -152,26 +152,26 @@ mod test {
     struct Renamed {
         #[celeste_name = "changed.field"]
         pub orig_name: u8,
-        pub kept_name: u16
+        pub kept_name: u16,
     }
 
     #[derive(Eq, PartialEq, Debug, BinElType)]
     struct MultipleChildren {
         #[celeste_child_vec]
         pub children: Vec<OneField>,
-        pub child: EmptyMixedCase
+        pub child: EmptyMixedCase,
     }
 
     #[derive(Eq, PartialEq, Debug, BinElType)]
     struct Optional {
-        pub child: Option<EmptyMixedCase>
+        pub child: Option<EmptyMixedCase>,
     }
 
     #[derive(Eq, PartialEq, Debug, BinElType)]
     struct Skip {
         #[celeste_skip]
         pub skipped: String,
-        pub kept: String
+        pub kept: String,
     }
 
     #[derive(PartialEq, Debug, Clone, BinElType)]
@@ -180,7 +180,7 @@ mod test {
     fn create_empty() -> BinEl {
         let binel = match (EmptyMixedCase {}).into_binel() {
             BinElValue::Element(elem) => elem,
-            _ => panic!("Didn't get element!")
+            _ => panic!("Didn't get element!"),
         };
 
         assert_eq!(binel.name, "emptyMixedCase");
@@ -206,7 +206,7 @@ mod test {
 
         let binel = match (OneField { number_field }).into_binel() {
             BinElValue::Element(elem) => elem,
-            _ => panic!("Didn't get element!")
+            _ => panic!("Didn't get element!"),
         };
 
         assert_eq!(binel.name, "oneField");
@@ -215,7 +215,7 @@ mod test {
 
         match binel.attributes.get("numberField").unwrap() {
             BinElAttr::Int(num) => assert_eq!(*num, number_field as i32),
-            _ => panic!("Didn't get int!")
+            _ => panic!("Didn't get int!"),
         }
 
         binel
@@ -238,12 +238,12 @@ mod test {
 
         let binel = match (Renamed {
             orig_name,
-            kept_name
+            kept_name,
         })
         .into_binel()
         {
             BinElValue::Element(elem) => elem,
-            _ => panic!("Didn't get element!")
+            _ => panic!("Didn't get element!"),
         };
 
         assert_eq!(binel.name, "new/name");
@@ -256,12 +256,12 @@ mod test {
             .expect("orig_name wasn't renamed!")
         {
             BinElAttr::Int(num) => assert_eq!(*num, orig_name as i32),
-            _ => panic!("Didn't get int!")
+            _ => panic!("Didn't get int!"),
         }
 
         match binel.attributes.get("keptName").unwrap() {
             BinElAttr::Int(num) => assert_eq!(*num, kept_name as i32),
-            _ => panic!("Didn't get int!")
+            _ => panic!("Didn't get int!"),
         }
 
         binel
@@ -291,12 +291,12 @@ mod test {
         let elem_field = OneField { number_field };
         let rec = Recursive {
             elem_field,
-            string_field: string_field.to_string()
+            string_field: string_field.to_string(),
         };
 
         let binel = match rec.into_binel() {
             BinElValue::Element(elem) => elem,
-            _ => panic!("Didn't get element!")
+            _ => panic!("Didn't get element!"),
         };
 
         assert_eq!(binel.name, "recursive");
@@ -305,7 +305,7 @@ mod test {
 
         match binel.attributes.get("stringField").unwrap() {
             BinElAttr::Text(string) => assert_eq!(string, "Hello, world!"),
-            _ => panic!("Didn't get text!")
+            _ => panic!("Didn't get text!"),
         }
 
         let child = binel.children().next().unwrap();
@@ -316,7 +316,7 @@ mod test {
 
         match child.attributes.get("numberField").unwrap() {
             BinElAttr::Int(num) => assert_eq!(*num, number_field as i32),
-            _ => panic!("Didn't get int!")
+            _ => panic!("Didn't get int!"),
         }
 
         binel
@@ -345,12 +345,12 @@ mod test {
 
         let obj = MultipleChildren {
             children: vec,
-            child: EmptyMixedCase {}
+            child: EmptyMixedCase {},
         };
 
         let binel = match obj.into_binel() {
             BinElValue::Element(elem) => elem,
-            _ => panic!("Didn't get element!")
+            _ => panic!("Didn't get element!"),
         };
 
         assert_eq!(binel.children().count(), 4);
@@ -362,7 +362,7 @@ mod test {
             assert_eq!(e.attributes.len(), 1);
             match e.attributes.get("numberField").unwrap() {
                 BinElAttr::Int(num) => assert_eq!(*num, 5),
-                _ => panic!("Didn't get int!")
+                _ => panic!("Didn't get int!"),
             }
         }
 
@@ -392,12 +392,12 @@ mod test {
 
     fn create_optional_some() -> BinEl {
         let binel = match (Optional {
-            child: Some(EmptyMixedCase {})
+            child: Some(EmptyMixedCase {}),
         })
         .into_binel()
         {
             BinElValue::Element(elem) => elem,
-            _ => panic!("Didn't get element!")
+            _ => panic!("Didn't get element!"),
         };
 
         assert_eq!(binel.children().count(), 1);
@@ -424,7 +424,7 @@ mod test {
     fn create_optional_none() -> BinEl {
         let binel = match (Optional { child: None }).into_binel() {
             BinElValue::Element(elem) => elem,
-            _ => panic!("Didn't get element!")
+            _ => panic!("Didn't get element!"),
         };
 
         assert_eq!(binel.children().count(), 0);
@@ -448,12 +448,12 @@ mod test {
     fn create_skip() -> BinEl {
         let binel = match (Skip {
             skipped: "hi".to_string(),
-            kept: "bye".to_string()
+            kept: "bye".to_string(),
         })
         .into_binel()
         {
             BinElValue::Element(elem) => elem,
-            _ => panic!("Didn't get element!")
+            _ => panic!("Didn't get element!"),
         };
 
         assert_eq!(binel.children().count(), 0);
@@ -497,7 +497,7 @@ mod test {
         let newtype = Newtype(binel.clone());
         let elem = match newtype.clone().into_binel() {
             BinElValue::Element(elem) => elem,
-            _ => panic!("Didn't get element!")
+            _ => panic!("Didn't get element!"),
         };
         assert_eq!(elem, binel);
         assert_eq!(elem, newtype.0);

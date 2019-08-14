@@ -11,5 +11,8 @@ pub mod binel;
 /// `maps` provides structs for maps parsed using `binel`.
 pub mod maps;
 
+/// `dialog` handles Celeste's dialog files.
+pub mod dialog;
+
 mod error;
 pub use error::*;

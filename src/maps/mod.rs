@@ -6,7 +6,7 @@ use crate::binel::*;
 #[celeste_name = "Style"]
 pub struct Stylegrounds {
     pub foregrounds: Foregrounds,
-    pub backgrounds: Backgrounds // TODO: implement stylegrounds
+    pub backgrounds: Backgrounds, // TODO: implement stylegrounds
 }
 
 /// Foreground stylegrounds. Currently not deserialized, instead just being a newtype over `BinEl`.
@@ -24,7 +24,7 @@ pub struct Backgrounds(pub BinEl);
 #[celeste_name = "bgtiles"]
 pub struct BGTiles {
     /// The tileset. Seems to always be "Scenery," but this may change.
-    pub tileset: String
+    pub tileset: String,
 }
 
 /// The tilesets used in the `Level`'s foreground.
@@ -32,7 +32,7 @@ pub struct BGTiles {
 #[celeste_name = "fgtiles"]
 pub struct FGTiles {
     /// The tileset. Seems to always be "Scenery," but this may change.
-    pub tileset: String
+    pub tileset: String,
 }
 
 /// The solid tiles in the `Level`'s foreground.
@@ -40,7 +40,7 @@ pub struct FGTiles {
 pub struct Solids {
     /// The actual tiles, stored as a string.
     #[celeste_name = "innerText"]
-    pub contents: String
+    pub contents: String,
 }
 
 /// The tiles in the `Level`'s background.
@@ -48,7 +48,7 @@ pub struct Solids {
 #[celeste_name = "bg"]
 pub struct BGSolids {
     #[celeste_name = "innerText"]
-    pub contents: String
+    pub contents: String,
 }
 
 /// Decals, or image assets in a `Level`.
@@ -63,7 +63,7 @@ pub struct Decal {
     /// Vertical stretching of the `Decal`.
     pub scale_y: i32,
     /// The texture of the `Decal`, within the Gameplay atlas.
-    pub texture: String
+    pub texture: String,
 }
 
 /// Background decals, or image assets in a `Level`.
@@ -75,7 +75,7 @@ pub struct BGDecals {
     pub tileset: String,
     /// The decals.
     #[celeste_child_vec]
-    pub decals: Vec<Decal>
+    pub decals: Vec<Decal>,
 }
 
 /// Foreground decals, or image assets in a `Level`.
@@ -87,7 +87,7 @@ pub struct FGDecals {
     pub tileset: String,
     /// The decals.
     #[celeste_child_vec]
-    pub decals: Vec<Decal>
+    pub decals: Vec<Decal>,
 }
 
 /// Entities, or objects in the `Level` with associated code.
@@ -95,7 +95,7 @@ pub struct FGDecals {
 pub struct Entities {
     /// The actual entities. May be one of over 100 elements, so currently parsed as a raw BinEl.
     #[celeste_child_vec]
-    pub entities: Vec<BinEl>
+    pub entities: Vec<BinEl>,
 }
 
 /// Triggers, or regions in the `Level` with associated code.
@@ -103,14 +103,14 @@ pub struct Entities {
 pub struct Triggers {
     /// The actual triggers. May be one of over 50 elements, so currently parsed as a raw BinEl.
     #[celeste_child_vec]
-    pub triggers: Vec<BinEl>
+    pub triggers: Vec<BinEl>,
 }
 
 /// Object tiles. Poorly documented.
 #[derive(Clone, PartialEq, Debug, Default, BinElType)]
 pub struct ObjTiles {
     #[celeste_name = "innerText"]
-    pub tiles: String
+    pub tiles: String,
 }
 
 /// Filler regions in the map. An alternate way of storing rooms filled with a single tile and no
@@ -163,7 +163,7 @@ pub struct Level {
     pub objtiles: Option<ObjTiles>,
     /// All children that failed to parse.
     #[celeste_child_vec]
-    pub invalid: Vec<BinEl>
+    pub invalid: Vec<BinEl>,
 }
 
 /// All `Level`s in a `Map`. Stored as a subelement for unknown reasons.
@@ -173,7 +173,7 @@ pub struct Levels {
     pub levels: Vec<Level>,
     /// All children that couldn't be parsed as `Level`s.
     #[celeste_child_vec]
-    pub invalid_levels: Vec<BinEl>
+    pub invalid_levels: Vec<BinEl>,
 }
 
 /// A chapter, also known as an Area in the game's code. `Map` was chosen to avoid confusion.
@@ -185,5 +185,5 @@ pub struct Map {
     pub levels: Levels,
     pub filler: Filler,
     /// Optional, as it is an Everest extension, and thus many maps do not include it.
-    pub meta: Option<Meta>
+    pub meta: Option<Meta>,
 }

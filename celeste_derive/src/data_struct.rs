@@ -10,7 +10,7 @@ pub(crate) fn binel_type_struct(input: DeriveInput, name: String) -> proc_macro:
 
     let body = match input.data {
         Data::Struct(body) => body,
-        _ => panic!("You can only derive BinElType on structs!")
+        _ => panic!("You can only derive BinElType on structs!"),
     };
 
     let mut s_idents = Vec::new();
@@ -31,7 +31,7 @@ pub(crate) fn binel_type_struct(input: DeriveInput, name: String) -> proc_macro:
         let mut is_vec = false;
         let ident = match &field.ident {
             &Some(ref ident) => ident.clone(),
-            &None => panic!("Your struct is missing a field identity!")
+            &None => panic!("Your struct is missing a field identity!"),
         };
         let mut name = ident.to_string().to_mixed_case();
         for ref attr in field.attrs.iter() {
@@ -70,7 +70,7 @@ pub(crate) fn binel_type_struct(input: DeriveInput, name: String) -> proc_macro:
                     if kv.ident.to_string() == "celeste_name" {
                         name = match kv.lit {
                             Lit::Str(string) => string.value(),
-                            _ => panic!("celeste_name must be a string!")
+                            _ => panic!("celeste_name must be a string!"),
                         };
                     }
                     assert_ne!(
@@ -133,7 +133,7 @@ pub(crate) fn binel_type_struct(input: DeriveInput, name: String) -> proc_macro:
                                     panic!("A field with celeste_child_vec's type must have a single generic argument!");
                                 }
                             }
-                            _ => panic!("A field with celeste_child_vec's type must be generic!")
+                            _ => panic!("A field with celeste_child_vec's type must be generic!"),
                         }
                     }
                 }

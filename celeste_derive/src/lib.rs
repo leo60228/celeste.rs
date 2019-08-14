@@ -20,7 +20,7 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         Data::Struct(data) => {
             data.fields.iter().count() == 1 && data.fields.iter().all(|field| field.ident == None)
         }
-        _ => false
+        _ => false,
     };
 
     for ref attr in input.attrs.iter() {
@@ -63,7 +63,7 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 if kv.ident.to_string() == "celeste_name" {
                     name = match kv.lit {
                         Lit::Str(string) => string.value(),
-                        _ => panic!("celeste_name must be a string!")
+                        _ => panic!("celeste_name must be a string!"),
                     };
                 }
                 assert_ne!(

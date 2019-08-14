@@ -72,7 +72,7 @@ pub fn encode_rle_string(string: &str) -> Vec<u8> {
 pub fn put_tagged_str(
     mut writer: &mut dyn Write,
     lookup: &[String],
-    val: &str
+    val: &str,
 ) -> std::io::Result<()> {
     if let Some(index) = lookup.iter().position(|e| *e == val) {
         writer.write_u8(0x05)?;
@@ -97,14 +97,14 @@ pub fn put_tagged_str(
 pub fn put_element(
     mut writer: &mut dyn Write,
     lookup: &[String],
-    elem: &BinEl
+    elem: &BinEl,
 ) -> std::io::Result<()> {
     let name_index = match lookup.iter().position(|e| *e == elem.name) {
         Some(p) => p,
         None => {
             return Err(Error::new(
                 ErrorKind::NotFound,
-                format!("Element name {} is missing in lookup", elem.name)
+                format!("Element name {} is missing in lookup", elem.name),
             ))
         }
     };
@@ -118,7 +118,7 @@ pub fn put_element(
             None => {
                 return Err(Error::new(
                     ErrorKind::NotFound,
-                    format!("Attribute name {} is missing in lookup", attr)
+                    format!("Attribute name {} is missing in lookup", attr),
                 ))
             }
         };
@@ -127,7 +127,7 @@ pub fn put_element(
             BinElAttr::Bool(val) => put_tagged_bool(&mut writer, *val)?,
             BinElAttr::Int(val) => put_tagged_int(&mut writer, *val)?,
             BinElAttr::Float(val) => put_tagged_f32(&mut writer, *val)?,
-            BinElAttr::Text(val) => put_tagged_str(&mut writer, lookup, &val)?
+            BinElAttr::Text(val) => put_tagged_str(&mut writer, lookup, &val)?,
         }
     }
 
@@ -142,7 +142,7 @@ pub fn put_element(
 fn gen_lookup_keys(binel: &BinEl, mut seen: &mut HashMap<String, usize>) {
     seen.insert(
         binel.name.clone(),
-        seen.get(binel.name.as_str()).unwrap_or(&0) + 1
+        seen.get(binel.name.as_str()).unwrap_or(&0) + 1,
     );
 
     for (k, v) in &binel.attributes {

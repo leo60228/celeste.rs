@@ -9,7 +9,7 @@ pub(crate) fn binel_type_newtype(input: DeriveInput, name: String) -> proc_macro
 
     let ty = match &input.data {
         Data::Struct(data) => &data.fields.iter().next().unwrap().ty,
-        _ => panic!("Newtype derive implementation received non-struct input!")
+        _ => panic!("Newtype derive implementation received non-struct input!"),
     };
 
     let attr_ty = ty.clone();
