@@ -25,7 +25,8 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
     for ref attr in input.attrs.iter() {
         match attr.parse_meta() {
-            Ok(Meta::Word(word)) => {
+            Ok(Meta::Path(path)) => {
+                let word = &path.segments.last().unwrap().ident;
                 assert_ne!(
                     word.to_string(),
                     "celeste_name",
@@ -44,35 +45,35 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             }
             Ok(Meta::List(list)) => {
                 assert_ne!(
-                    list.ident.to_string(),
+                    list.path.segments.last().unwrap().ident.to_string(),
                     "celeste_name",
                     "celeste_name must have a value!"
                 );
                 assert_ne!(
-                    list.ident.to_string(),
+                    list.path.segments.last().unwrap().ident.to_string(),
                     "celeste_child_vec",
                     "celeste_child_vec is only valid on fields!"
                 );
                 assert_ne!(
-                    list.ident.to_string(),
+                    list.path.segments.last().unwrap().ident.to_string(),
                     "celeste_skip",
                     "celeste_skip is only valid on fields!"
                 );
             }
             Ok(Meta::NameValue(kv)) => {
-                if kv.ident.to_string() == "celeste_name" {
+                if kv.path.segments.last().unwrap().ident.to_string() == "celeste_name" {
                     name = match kv.lit {
                         Lit::Str(string) => string.value(),
                         _ => panic!("celeste_name must be a string!"),
                     };
                 }
                 assert_ne!(
-                    kv.ident.to_string(),
+                    kv.path.segments.last().unwrap().ident.to_string(),
                     "celeste_child_vec",
                     "celeste_child_vec is only valid on fields!"
                 );
                 assert_ne!(
-                    kv.ident.to_string(),
+                    kv.path.segments.last().unwrap().ident.to_string(),
                     "celeste_skip",
                     "celeste_skip is only valid on fields!"
                 );

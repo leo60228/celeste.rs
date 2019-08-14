@@ -36,53 +36,38 @@ pub(crate) fn binel_type_struct(input: DeriveInput, name: String) -> proc_macro:
         let mut name = ident.to_string().to_mixed_case();
         for ref attr in field.attrs.iter() {
             match attr.parse_meta() {
-                Ok(Meta::Word(word)) => {
-                    if word.to_string() == "celeste_child_vec" {
+                Ok(Meta::Path(path)) => {
+                    let word = path.segments.last().unwrap().ident.to_string();
+                    if word == "celeste_child_vec" {
                         is_vec = true;
                     }
-                    if word.to_string() == "celeste_skip" {
+                    if word == "celeste_skip" {
                         skip = true;
                     }
-                    assert_ne!(
-                        word.to_string(),
-                        "celeste_name",
-                        "celeste_name must have a value!"
-                    );
+                    assert_ne!(word, "celeste_name", "celeste_name must have a value!");
                 }
                 Ok(Meta::List(list)) => {
+                    let word = list.path.segments.last().unwrap().ident.to_string();
+                    assert_ne!(word, "celeste_name", "celeste_name must have a value!");
                     assert_ne!(
-                        list.ident.to_string(),
-                        "celeste_name",
-                        "celeste_name must have a value!"
-                    );
-                    assert_ne!(
-                        list.ident.to_string(),
-                        "celeste_child_vec",
+                        word, "celeste_child_vec",
                         "celeste_child_vec has no arguments!"
                     );
-                    assert_ne!(
-                        list.ident.to_string(),
-                        "celeste_skip",
-                        "celeste_skip has no arguments!"
-                    );
+                    assert_ne!(word, "celeste_skip", "celeste_skip has no arguments!");
                 }
                 Ok(Meta::NameValue(kv)) => {
-                    if kv.ident.to_string() == "celeste_name" {
+                    let word = kv.path.segments.last().unwrap().ident.to_string();
+                    if word == "celeste_name" {
                         name = match kv.lit {
                             Lit::Str(string) => string.value(),
                             _ => panic!("celeste_name must be a string!"),
                         };
                     }
                     assert_ne!(
-                        kv.ident.to_string(),
-                        "celeste_child_vec",
+                        word, "celeste_child_vec",
                         "celeste_child_vec has no arguments!"
                     );
-                    assert_ne!(
-                        kv.ident.to_string(),
-                        "celeste_skip",
-                        "celeste_skip has no arguments!"
-                    );
+                    assert_ne!(word, "celeste_skip", "celeste_skip has no arguments!");
                 }
                 _ => {}
             }
@@ -96,17 +81,7 @@ pub(crate) fn binel_type_struct(input: DeriveInput, name: String) -> proc_macro:
 
                 let last = path.segments.last();
 
-                if let Some(last) = match last {
-                    Some(punctuated::Pair::Punctuated(segment, _)) => Some(segment),
-                    Some(punctuated::Pair::End(segment)) => Some(segment),
-                    _ => {
-                        if is_vec {
-                            panic!("A field with celeste_child_vec must have a type!")
-                        } else {
-                            None
-                        }
-                    }
-                } {
+                if let Some(last) = last {
                     if last.ident.to_string() == "Option" {
                         is_opt = true;
                     }

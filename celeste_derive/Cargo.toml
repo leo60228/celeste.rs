@@ -12,8 +12,8 @@ repository = "https://github.com/leo60228/celesters"
 proc-macro = true
 
 [dependencies]
-syn = "0.15.26"
-quote = "0.6.11"
+syn = "1.0.1"
+quote = "1.0.0"
 heck = "0.3.1"
 
 [dev-dependencies.celeste]
