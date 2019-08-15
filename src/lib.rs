@@ -2,6 +2,9 @@
 //! `celeste` is a Rust crate for files used in the 2018 video game Celeste. It currently has a fully-functional writer and parser for `BinaryElement` files, which are used to store the game's levels.
 
 #![recursion_limit = "1024"]
+#![cfg_attr(not(feature = "std"), no_std)]
+
+extern crate no_std_compat as std;
 
 extern crate self as celeste; // necessary for celeste_derive to work
 
@@ -9,6 +12,7 @@ extern crate self as celeste; // necessary for celeste_derive to work
 pub mod binel;
 
 /// `maps` provides structs for maps parsed using `binel`.
+#[cfg(feature = "derive")]
 pub mod maps;
 
 /// `dialog` handles Celeste's dialog files.

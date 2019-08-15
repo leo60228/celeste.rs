@@ -1,7 +1,10 @@
 use snafu::Snafu;
 use std::borrow::Cow;
-use std::io;
 use std::result::Result as StdResult;
+use std::prelude::v1::*;
+
+#[cfg(feature = "std")]
+use std::io;
 
 #[derive(Debug, Snafu)]
 pub enum Error<'a> {
@@ -10,6 +13,7 @@ pub enum Error<'a> {
         name: Cow<'static, str>,
         received_name: Option<String>,
     },
+    #[cfg(feature = "std")]
     #[snafu(display("Error writing file: {}", source))]
     Write { source: io::Error },
     #[snafu(display("Error parsing file: {:?}", source))]
@@ -36,6 +40,7 @@ impl Error<'_> {
         }
     }
 
+    #[cfg(feature = "std")]
     pub fn io(kind: io::ErrorKind, text: String) -> Self {
         Error::Write {
             source: io::Error::new(kind, text),
@@ -43,6 +48,7 @@ impl Error<'_> {
     }
 }
 
+#[cfg(feature = "std")]
 impl From<io::Error> for Error<'_> {
     fn from(source: io::Error) -> Self {
         Error::Write { source }

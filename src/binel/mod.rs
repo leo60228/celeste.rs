@@ -1,10 +1,12 @@
+use std::prelude::v1::*;
 use lazy_static::lazy_static;
-use std::collections::HashMap;
+use hashbrown::HashMap;
 
 /// `parser` parses `BinaryElement` files.
 pub mod parser;
 
-/// `writer` writes `BinaryElement` files.
+/// `writer` writes `BinaryElement` files. Only available when the `std` feature is enabled (default).
+#[cfg(feature = "std")]
 pub mod writer;
 
 /// `serialize` serializes and deserializes `BinEl`s.

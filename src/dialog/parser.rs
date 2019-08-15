@@ -1,3 +1,5 @@
+use std::prelude::v1::*;
+
 use super::{Dialog, DialogEntry, DialogKey};
 use nom::branch::alt;
 use nom::bytes::complete::{tag, take_till};
@@ -93,7 +95,7 @@ pub fn parse_entries<'a>(inp: &'a str) -> IResult<&'a str, Dialog<'a>> {
 #[cfg(test)]
 mod tests {
     use crate::dialog::*;
-    use std::collections::HashMap;
+    use hashbrown::HashMap;
 
     #[test]
     fn dialog_entry() {

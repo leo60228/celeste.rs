@@ -1,3 +1,4 @@
+use std::prelude::v1::*;
 use super::*;
 use crate::{Error, Result};
 
@@ -128,7 +129,7 @@ impl<T: BinElType> BinElType for Option<T> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "std"))]
 mod test {
     use crate::binel::serialize::{BinElType, BinElValue};
     use crate::binel::{BinEl, BinElAttr};

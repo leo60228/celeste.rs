@@ -1,8 +1,9 @@
+use std::prelude::v1::*;
 use derive_more::{From, Into};
 use shrinkwraprs::Shrinkwrap;
 use std::borrow::Cow;
 use std::cmp;
-use std::collections::{hash_map, HashMap};
+use hashbrown::{hash_map, HashMap};
 use std::iter::{self, FromIterator};
 
 pub mod parser;
