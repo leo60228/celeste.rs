@@ -1,7 +1,8 @@
 use super::*;
 use byteorder::{LittleEndian, WriteBytesExt};
+use celeste::{Error, Result};
 use itertools::Itertools;
-use std::io::{prelude::*, Error, ErrorKind};
+use std::io::{prelude::*, ErrorKind};
 
 /// Write a string using a varint for the length.
 ///
@@ -16,7 +17,7 @@ use std::io::{prelude::*, Error, ErrorKind};
 ///
 /// assert_eq!(&buf.get_ref()[..], b"\x0bCELESTE MAP");
 /// ```
-pub fn put_string(writer: &mut dyn Write, string: &str) -> std::io::Result<()> {
+pub fn put_string(writer: &mut dyn Write, string: &str) -> Result<'static, ()> {
     let mut length_buf = unsigned_varint::encode::usize_buffer();
     let length = unsigned_varint::encode::usize(string.len(), &mut length_buf);
     writer.write_all(length)?;
@@ -27,7 +28,7 @@ pub fn put_string(writer: &mut dyn Write, string: &str) -> std::io::Result<()> {
 }
 
 /// Write a bool, tagged with 0x00.
-pub fn put_tagged_bool(writer: &mut dyn Write, val: bool) -> std::io::Result<()> {
+pub fn put_tagged_bool(writer: &mut dyn Write, val: bool) -> Result<'static, ()> {
     writer.write_u8(0x00)?;
     writer.write_u8(val as u8)?;
 
@@ -35,7 +36,7 @@ pub fn put_tagged_bool(writer: &mut dyn Write, val: bool) -> std::io::Result<()>
 }
 
 /// Write an i32 as either a u8 (tagged with 0x01), i16 (tagged with 0x02), or i32 (tagged with 0x03).
-pub fn put_tagged_int(writer: &mut dyn Write, val: i32) -> std::io::Result<()> {
+pub fn put_tagged_int(writer: &mut dyn Write, val: i32) -> Result<'static, ()> {
     if val >= u8::min_value().into() && val <= u8::max_value().into() {
         writer.write_u8(0x01)?;
         writer.write_u8(val as u8)?;
@@ -51,7 +52,7 @@ pub fn put_tagged_int(writer: &mut dyn Write, val: i32) -> std::io::Result<()> {
 }
 
 /// Write an f32, tagged with 0x04.
-pub fn put_tagged_f32(writer: &mut dyn Write, val: f32) -> std::io::Result<()> {
+pub fn put_tagged_f32(writer: &mut dyn Write, val: f32) -> Result<'static, ()> {
     writer.write_u8(0x04)?;
     writer.write_f32::<LittleEndian>(val)?;
 
@@ -73,7 +74,7 @@ pub fn put_tagged_str(
     mut writer: &mut dyn Write,
     lookup: &[String],
     val: &str,
-) -> std::io::Result<()> {
+) -> Result<'static, ()> {
     if let Some(index) = lookup.iter().position(|e| *e == val) {
         writer.write_u8(0x05)?;
         writer.write_u16::<LittleEndian>(index as u16)?;
@@ -98,11 +99,11 @@ pub fn put_element(
     mut writer: &mut dyn Write,
     lookup: &[String],
     elem: &BinEl,
-) -> std::io::Result<()> {
+) -> Result<'static, ()> {
     let name_index = match lookup.iter().position(|e| *e == elem.name) {
         Some(p) => p,
         None => {
-            return Err(Error::new(
+            return Err(Error::io(
                 ErrorKind::NotFound,
                 format!("Element name {} is missing in lookup", elem.name),
             ))
@@ -116,7 +117,7 @@ pub fn put_element(
         let attr_index = match lookup.iter().position(|e| e == attr) {
             Some(p) => p,
             None => {
-                return Err(Error::new(
+                return Err(Error::io(
                     ErrorKind::NotFound,
                     format!("Attribute name {} is missing in lookup", attr),
                 ))
@@ -169,7 +170,7 @@ pub fn gen_lookup(binel: &BinEl) -> Vec<String> {
 }
 
 /// Write a `BinFile`. Tested solely in integration tests due to complexity.
-pub fn put_file(mut writer: &mut dyn Write, bin: &BinFile) -> std::io::Result<()> {
+pub fn put_file(mut writer: &mut dyn Write, bin: &BinFile) -> Result<'static, ()> {
     put_string(&mut writer, "CELESTE MAP")?;
 
     put_string(&mut writer, &bin.package)?;

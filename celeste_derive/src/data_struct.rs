@@ -218,17 +218,17 @@ pub(crate) fn binel_type_struct(input: DeriveInput, name: String) -> proc_macro:
 
     let output = quote! {
         impl #impl_generics ::celeste::binel::serialize::BinElType for #ident #ty_generics #where_clause {
-            fn from_binel(binel: ::celeste::binel::serialize::BinElValue) -> ::celeste::Result<Self> {
+            fn from_binel(binel: ::celeste::binel::serialize::BinElValue) -> ::celeste::Result<'static, Self> {
                 use ::celeste::binel::*;
                 use ::celeste::Error;
 
                 let mut binel = match binel {
                     serialize::BinElValue::Element(elem) => elem,
-                    _ => return Err(format!("{} isn't an element!", #d_err_elem_name).into())
+                    _ => return Err(Error::from_name(#d_err_elem_name)),
                 };
 
                 if binel.name != #check_name {
-                    return Err(format!("Got wrong name! {} != {}", binel.name, #d_err_check_name).into());
+                    return Err(Error::wrong_name(#d_err_check_name, binel.name.clone()));
                 }
 
                 #(
@@ -259,7 +259,7 @@ pub(crate) fn binel_type_struct(input: DeriveInput, name: String) -> proc_macro:
                                 ::from_binel(serialize::BinElValue::Element(child.clone()));
 
                             #d_idents_checked = match (#d_idents_check, maybe) {
-                                (Some(_), Ok(_)) => return Err(format!("Not sure if {} is attribute or element!", #d_err_names).into()),
+                                (Some(_), Ok(_)) => return Err(Error::from_name(#d_err_names)),
                                 (Some(attr), Err(_)) => Some(attr),
                                 (None, Ok(child)) => Some(child),
                                 (None, Err(err)) => {#d_is_elem_err_idents = Some(err); None}
@@ -287,8 +287,8 @@ pub(crate) fn binel_type_struct(input: DeriveInput, name: String) -> proc_macro:
                 #(
                     let #d_req_idents = match (#d_req_idents_check, #d_req_err_idents) {
                         (Some(val), _) => val,
-                        (None, None) => return Err(format!("Can't find {}!", #d_req_missing_names).into()),
-                        (None, Some(err)) => return Err(Error::with_chain(err, format!("Unable to parse {}!", #d_req_err_names)))
+                        (None, None) => return Err(Error::from_name(#d_req_missing_names)),
+                        (None, Some(err)) => return Err(Error::from_name(#d_req_err_names)),
                     };
                 )*
                 #(

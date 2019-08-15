@@ -19,13 +19,13 @@ pub(crate) fn binel_type_newtype(input: DeriveInput, name: String) -> proc_macro
 
     let output = quote! {
         impl #impl_generics ::celeste::binel::serialize::BinElType for #ident #ty_generics #where_clause {
-            fn from_binel(binel: ::celeste::binel::serialize::BinElValue) -> ::celeste::Result<Self> {
+            fn from_binel(binel: ::celeste::binel::serialize::BinElValue) -> ::celeste::Result<'static, Self> {
                 use ::celeste::binel::*;
                 use ::celeste::Error;
 
                 if let serialize::BinElValue::Element(elem) = &binel {
                     if elem.name != #check_name {
-                        return Err(format!("Got wrong name! {} != {}", elem.name, #err_name).into());
+                        return Err(Error::wrong_name(#err_name, elem.name.clone()));
                     }
                 }
 

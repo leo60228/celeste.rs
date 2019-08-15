@@ -6,7 +6,7 @@ use nom::combinator::map;
 use nom::multi::count;
 use nom::number::complete::*;
 use nom::sequence::preceded;
-use nom::{take_str, IResult};
+use nom::{error::ParseError, take_str, IResult};
 use nom_varint::take_varint;
 
 /// Take a string with the length being a varint.
@@ -14,33 +14,55 @@ use nom_varint::take_varint;
 /// # Examples:
 /// ```
 /// use celeste::binel::parser::take_string;
+/// use celeste::Error;
 ///
 /// let header = b"\x0bCELESTE MAP";
 ///
-/// assert_eq!(take_string(&header[..]), Ok((&b""[..], "CELESTE MAP".to_string())));
+/// assert_eq!(take_string::<Error>(&header[..]).unwrap(), (&b""[..], "CELESTE MAP".to_string()));
 /// ```
-pub fn take_string(buf: &[u8]) -> IResult<&[u8], String> {
-    let (buf, length) = take_varint(buf)?;
+pub fn take_string<'a, E>(buf: &'a [u8]) -> IResult<&'a [u8], String, E>
+where
+    E: ParseError<&'a [u8]>,
+{
+    let (buf, length) = match take_varint(buf) {
+        Ok(res) => res,
+        Err(nom::Err::Error((buf, kind))) => {
+            return Err(nom::Err::Error(E::from_error_kind(buf, kind)))
+        }
+        Err(nom::Err::Failure((buf, kind))) => {
+            return Err(nom::Err::Failure(E::from_error_kind(buf, kind)))
+        }
+        Err(nom::Err::Incomplete(needed)) => return Err(nom::Err::Incomplete(needed)),
+    };
     let (buf, string) = take_str!(buf, length)?;
     Ok((buf, string.to_string()))
 }
 
 /// Lookup a u16 from a `&[u8]` in a string lookup table.
-pub fn take_lookup<'a: 'b, 'b>(
+pub fn take_lookup<'a: 'b, 'b, E: 'b>(
     lookup: &'b [String],
-) -> impl Fn(&'a [u8]) -> IResult<&'a [u8], &'b String> + 'b {
+) -> impl Fn(&'a [u8]) -> IResult<&'a [u8], &'b String, E> + 'b
+where
+    E: ParseError<&'a [u8]>,
+{
     map(le_u16, move |index| &lookup[index as usize])
 }
 
 /// Take a single character from a Celeste RLE-encoded string in a `&[u8]`.
-pub fn take_rle_char(buf: &[u8]) -> IResult<&[u8], String> {
+pub fn take_rle_char<'a, E>(buf: &'a [u8]) -> IResult<&'a [u8], String, E>
+where
+    E: ParseError<&'a [u8]>,
+{
     let (buf, times) = le_u8(buf)?;
     let (buf, byte) = le_u8(buf)?;
     Ok((buf, (byte as char).to_string().repeat(times as usize)))
 }
 
 /// Take a Celeste RLE-encoded string from a `&[u8]`
-pub fn take_rle_string(buf: &[u8]) -> IResult<&[u8], String> {
+pub fn take_rle_string<'a, E>(buf: &'a [u8]) -> IResult<&'a [u8], String, E>
+where
+    E: ParseError<&'a [u8]>,
+{
     let (buf, len) = le_i16(buf)?;
     let (buf, chars) = count(take_rle_char, (len / 2) as usize)(buf)?;
     Ok((buf, chars.concat()))
@@ -51,16 +73,20 @@ pub fn take_rle_string(buf: &[u8]) -> IResult<&[u8], String> {
 /// # Examples:
 /// ```
 /// use celeste::binel::*;
+/// use celeste::Error;
 ///
-/// assert_eq!(parser::take_elemattr(&[])(b"\x01\x05"), Ok((&b""[..], BinElAttr::Int(5))));
+/// assert_eq!(parser::take_elemattr::<Error>(&[])(b"\x01\x05").unwrap(), ((&b""[..], BinElAttr::Int(5))));
 /// ```
 #[allow(clippy::unknown_clippy_lints)]
 #[allow(renamed_and_removed_lints)]
 #[allow(clippy::cognitive_complexity)]
 #[allow(clippy::cyclomatic_complexity)]
-pub fn take_elemattr<'a: 'b, 'b>(
+pub fn take_elemattr<'a: 'b, 'b, E: 'b>(
     lookup: &'b [String],
-) -> impl Fn(&'a [u8]) -> IResult<&'a [u8], BinElAttr> + 'b {
+) -> impl Fn(&'a [u8]) -> IResult<&'a [u8], BinElAttr, E> + 'b
+where
+    E: ParseError<&'a [u8]>,
+{
     alt((
         preceded(
             tag(b"\x00"),
@@ -88,9 +114,12 @@ pub fn take_elemattr<'a: 'b, 'b>(
 }
 
 /// Parse a `BinEl` from a `&[u8]`. Tested solely in integration tests due to complexity.
-pub fn take_element<'a: 'b, 'b>(
+pub fn take_element<'a: 'b, 'b, E>(
     lookup: &'b [String],
-) -> impl Fn(&'a [u8]) -> IResult<&'a [u8], BinEl> + 'b {
+) -> impl Fn(&'a [u8]) -> IResult<&'a [u8], BinEl, E> + 'b
+where
+    E: ParseError<&'a [u8]>,
+{
     move |buf| {
         debug!("taking element");
         let mut buf = buf;
@@ -130,7 +159,10 @@ pub fn take_element<'a: 'b, 'b>(
 }
 
 /// Parse a `BinFile` from a `&[u8]`. Tested solely in integration tests due to complexity.
-pub fn take_file(buf: &[u8]) -> IResult<&[u8], BinFile> {
+pub fn take_file<'a, E>(buf: &'a [u8]) -> IResult<&'a [u8], BinFile, E>
+where
+    E: ParseError<&'a [u8]>,
+{
     let (buf, _) = tag(b"\x0bCELESTE MAP")(buf)?;
     let (buf, package) = take_string(buf)?;
     let (buf, length) = le_i16(buf)?;
@@ -142,20 +174,13 @@ pub fn take_file(buf: &[u8]) -> IResult<&[u8], BinFile> {
 #[cfg(test)]
 mod test {
     use super::*;
-
-    #[test]
-    fn take_header_length() {
-        assert_eq!(
-            take_varint(&b"\x0bCELESTE MAPdummy"[..]),
-            Ok((&b"CELESTE MAPdummy"[..], 0x0b))
-        );
-    }
+    use celeste::Error;
 
     #[test]
     fn take_header() {
         assert_eq!(
-            take_string(&b"\x0bCELESTE MAPdummy"[..]),
-            Ok((&b"dummy"[..], "CELESTE MAP".to_string()))
+            take_string::<Error>(&b"\x0bCELESTE MAPdummy"[..]).unwrap(),
+            (&b"dummy"[..], "CELESTE MAP".to_string())
         );
     }
 }

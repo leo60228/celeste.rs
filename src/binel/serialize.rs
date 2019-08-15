@@ -1,5 +1,5 @@
 use super::*;
-use crate::Result;
+use crate::{Error, Result};
 
 #[cfg(feature = "celeste_derive")]
 pub use celeste_derive::*;
@@ -31,7 +31,7 @@ pub trait BinElType: Sized {
     fn into_binel(self) -> BinElValue;
 
     /// Deserialize self from a BinElValue.
-    fn from_binel(binel: BinElValue) -> Result<Self>;
+    fn from_binel(binel: BinElValue) -> Result<'static, Self>;
 
     /// Whether the `BinElType` may serialize to a `BinElValue::Attribute`. Recommended.
     fn maybe_attr() -> bool {
@@ -58,10 +58,10 @@ macro_rules! impl_primitive {
             }
 
             #[allow(clippy::cast_lossless)]
-            fn from_binel(binel: BinElValue) -> Result<Self> {
+            fn from_binel(binel: BinElValue) -> Result<'static, Self> {
                 match binel {
                     BinElValue::Attribute(BinElAttr::$attr(e)) => Ok(e as $type),
-                    _ => Err("Not an attribute!".into()),
+                    _ => Err(Error::from_name(stringify!($type))),
                 }
             }
 
@@ -86,10 +86,10 @@ impl BinElType for BinEl {
         BinElValue::Element(self)
     }
 
-    fn from_binel(binel: BinElValue) -> Result<Self> {
+    fn from_binel(binel: BinElValue) -> Result<'static, Self> {
         match binel {
             BinElValue::Element(e) => Ok(e),
-            _ => Err("Not an element!".into()),
+            _ => Err(Error::from_name("BinElValue")),
         }
     }
 
@@ -103,10 +103,10 @@ impl BinElType for BinElAttr {
         BinElValue::Attribute(self)
     }
 
-    fn from_binel(binel: BinElValue) -> Result<Self> {
+    fn from_binel(binel: BinElValue) -> Result<'static, Self> {
         match binel {
             BinElValue::Attribute(e) => Ok(e),
-            _ => Err("Not an attribute!".into()),
+            _ => Err(Error::from_name("BinElAttr")),
         }
     }
 
@@ -123,7 +123,7 @@ impl<T: BinElType> BinElType for Option<T> {
         }
     }
 
-    fn from_binel(binel: BinElValue) -> Result<Self> {
+    fn from_binel(binel: BinElValue) -> Result<'static, Self> {
         Ok(T::from_binel(binel).ok())
     }
 }
