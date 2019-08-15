@@ -1,7 +1,7 @@
 use snafu::Snafu;
 use std::borrow::Cow;
-use std::result::Result as StdResult;
 use std::prelude::v1::*;
+use std::result::Result as StdResult;
 
 #[cfg(feature = "std")]
 use std::io;

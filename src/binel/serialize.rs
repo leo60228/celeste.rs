@@ -1,6 +1,6 @@
-use std::prelude::v1::*;
 use super::*;
 use crate::{Error, Result};
+use std::prelude::v1::*;
 
 #[cfg(feature = "celeste_derive")]
 pub use celeste_derive::*;

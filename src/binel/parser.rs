@@ -1,4 +1,3 @@
-use std::prelude::v1::*;
 use super::*;
 use log::*;
 use nom::branch::alt;
@@ -9,6 +8,7 @@ use nom::number::complete::*;
 use nom::sequence::preceded;
 use nom::{error::ParseError, take_str, IResult};
 use nom_varint::take_varint;
+use std::prelude::v1::*;
 
 /// Take a string with the length being a varint.
 ///

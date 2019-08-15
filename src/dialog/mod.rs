@@ -1,10 +1,10 @@
-use std::prelude::v1::*;
 use derive_more::{From, Into};
+use hashbrown::{hash_map, HashMap};
 use shrinkwraprs::Shrinkwrap;
 use std::borrow::Cow;
 use std::cmp;
-use hashbrown::{hash_map, HashMap};
 use std::iter::{self, FromIterator};
+use std::prelude::v1::*;
 
 pub mod parser;
 pub mod writer;

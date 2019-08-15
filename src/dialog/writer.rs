@@ -1,6 +1,6 @@
-use std::prelude::v1::*;
 use super::{Dialog, DialogKey};
 use std::fmt;
+use std::prelude::v1::*;
 
 impl fmt::Display for DialogKey<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

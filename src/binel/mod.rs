@@ -1,6 +1,6 @@
-use std::prelude::v1::*;
-use lazy_static::lazy_static;
 use hashbrown::HashMap;
+use lazy_static::lazy_static;
+use std::prelude::v1::*;
 
 /// `parser` parses `BinaryElement` files.
 pub mod parser;

@@ -1,6 +1,6 @@
-use std::prelude::v1::*;
 use crate::binel::serialize::*;
 use crate::binel::*;
+use std::prelude::v1::*;
 
 /// A `Level`'s "stylegrounds," or complexly animated backgrounds.
 #[derive(Clone, PartialEq, Debug, Default, BinElType)]
