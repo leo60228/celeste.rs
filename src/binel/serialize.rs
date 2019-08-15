@@ -14,18 +14,21 @@ pub enum BinElValue {
 /// A type that can be serialized to and from a `BinEl`.
 ///
 /// # Deriving
-/// This type can be derived through a proc macro if the `celeste_derive` feature is enabled. This
-/// is the default. If the type is a normal struct, then it will be serialized as an element, named
-/// using the `celeste_name` key-value attribute (ex. `#[celeste_name = "element"]`), or defaulting
-/// to the name of the struct in mixed case (converted via `heck`). All fields that serialize to a
-/// `BinElValue::Element` will get serialized as a child, and ones that serialize to a
-/// `BinElValue::Attribute` get added as an attribute. The attribute is named using `celeste_name`,
-/// again defaulting to mixed case.
+/// This type can be derived through a proc macro if the `celeste_derive`
+/// feature is enabled. This is the default. If the type is a normal struct,
+/// then it will be serialized as an element, named using the `celeste_name`
+/// key-value attribute (ex. `#[celeste_name = "element"]`), or defaulting
+/// to the name of the struct in mixed case (converted via `heck`). All fields
+/// that serialize to a `BinElValue::Element` will get serialized as a child,
+/// and ones that serialize to a `BinElValue::Attribute` get added as an
+/// attribute. The attribute is named using `celeste_name`, again defaulting to
+/// mixed case.
 ///
-/// Alternatively, if it is a newtype (i.e. tuple struct with single type), then it will get
-/// serialized as the type it is based off of. If this is an element, it must have the same name as
-/// the newtype struct (`celeste_name` is allowed). This can be useful for stubbing out complex
-/// elements that you still want to include in the output.
+/// Alternatively, if it is a newtype (i.e. tuple struct with single type), then
+/// it will get serialized as the type it is based off of. If this is an
+/// element, it must have the same name as the newtype struct (`celeste_name` is
+/// allowed). This can be useful for stubbing out complex elements that you
+/// still want to include in the output.
 pub trait BinElType: Sized {
     /// Serialize self into a BinElValue. Can never fail.
     fn into_binel(self) -> BinElValue;
@@ -33,18 +36,20 @@ pub trait BinElType: Sized {
     /// Deserialize self from a BinElValue.
     fn from_binel(binel: BinElValue) -> Result<'static, Self>;
 
-    /// Whether the `BinElType` may serialize to a `BinElValue::Attribute`. Recommended.
+    /// Whether the `BinElType` may serialize to a `BinElValue::Attribute`.
+    /// Recommended.
     fn maybe_attr() -> bool {
         true
     }
 
-    /// Whether the `BinElType` may serialize to a `BinElValue::Element`. Recommended.
+    /// Whether the `BinElType` may serialize to a `BinElValue::Element`.
+    /// Recommended.
     fn maybe_elem() -> bool {
         true
     }
 
-    /// If there is a single valid name when deserializing from an element, and you know it at
-    /// compile-time, implement this. Recommended.
+    /// If there is a single valid name when deserializing from an element, and
+    /// you know it at compile-time, implement this. Recommended.
     fn elem_name() -> Option<&'static str> {
         None
     }

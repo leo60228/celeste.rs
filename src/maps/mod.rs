@@ -10,12 +10,14 @@ pub struct Stylegrounds {
     pub backgrounds: Backgrounds, // TODO: implement stylegrounds
 }
 
-/// Foreground stylegrounds. Currently not deserialized, instead just being a newtype over `BinEl`.
+/// Foreground stylegrounds. Currently not deserialized, instead just being a
+/// newtype over `BinEl`.
 #[derive(Clone, PartialEq, Debug, Default, BinElType)]
 #[celeste_name = "Foregrounds"]
 pub struct Foregrounds(pub BinEl);
 
-/// Background stylegrounds. Currently not deserialized, instead just being a newtype over `BinEl`.
+/// Background stylegrounds. Currently not deserialized, instead just being a
+/// newtype over `BinEl`.
 #[derive(Clone, PartialEq, Debug, Default, BinElType)]
 #[celeste_name = "Backgrounds"]
 pub struct Backgrounds(pub BinEl);
@@ -71,8 +73,8 @@ pub struct Decal {
 #[derive(Clone, PartialEq, Debug, Default, BinElType)]
 #[celeste_name = "bgdecals"]
 pub struct BGDecals {
-    /// The "tileset". Seems to always be "Scenery," but this may change. Unclear what this is used
-    /// for.
+    /// The "tileset". Seems to always be "Scenery," but this may change.
+    /// Unclear what this is used for.
     pub tileset: String,
     /// The decals.
     #[celeste_child_vec]
@@ -83,8 +85,8 @@ pub struct BGDecals {
 #[derive(Clone, PartialEq, Debug, Default, BinElType)]
 #[celeste_name = "fgdecals"]
 pub struct FGDecals {
-    /// The "tileset". Seems to always be "Scenery," but this may change. Unclear what this is used
-    /// for.
+    /// The "tileset". Seems to always be "Scenery," but this may change.
+    /// Unclear what this is used for.
     pub tileset: String,
     /// The decals.
     #[celeste_child_vec]
@@ -94,7 +96,8 @@ pub struct FGDecals {
 /// Entities, or objects in the `Level` with associated code.
 #[derive(Clone, PartialEq, Debug, Default, BinElType)]
 pub struct Entities {
-    /// The actual entities. May be one of over 100 elements, so currently parsed as a raw BinEl.
+    /// The actual entities. May be one of over 100 elements, so currently
+    /// parsed as a raw BinEl.
     #[celeste_child_vec]
     pub entities: Vec<BinEl>,
 }
@@ -102,7 +105,8 @@ pub struct Entities {
 /// Triggers, or regions in the `Level` with associated code.
 #[derive(Clone, PartialEq, Debug, Default, BinElType)]
 pub struct Triggers {
-    /// The actual triggers. May be one of over 50 elements, so currently parsed as a raw BinEl.
+    /// The actual triggers. May be one of over 50 elements, so currently parsed
+    /// as a raw BinEl.
     #[celeste_child_vec]
     pub triggers: Vec<BinEl>,
 }
@@ -114,14 +118,16 @@ pub struct ObjTiles {
     pub tiles: String,
 }
 
-/// Filler regions in the map. An alternate way of storing rooms filled with a single tile and no
-/// other assets. Not currently parsed, as they are not necessary for most use cases. The `Map`'s
-/// behavior shouldn't change if you remove these.
+/// Filler regions in the map. An alternate way of storing rooms filled with a
+/// single tile and no other assets. Not currently parsed, as they are not
+/// necessary for most use cases. The `Map`'s behavior shouldn't change if you
+/// remove these.
 #[derive(Clone, PartialEq, Debug, Default, BinElType)]
 #[celeste_name = "Filler"]
 pub struct Filler(pub BinEl); // TODO: parse filler
 
-/// Undocumented (apart from source) Everest extension, for storing the `Map`'s name and icon.
+/// Undocumented (apart from source) Everest extension, for storing the `Map`'s
+/// name and icon.
 #[derive(Clone, PartialEq, Debug, Default, BinElType)]
 pub struct Meta(pub BinEl);
 
@@ -142,8 +148,8 @@ pub struct Level {
     pub underwater: bool,
     /// Unclear what this does.
     pub c: i32, // ???
-    /// Unclear what this does, though I believe that it is the default music used by Music
-    /// triggers.
+    /// Unclear what this does, though I believe that it is the default music
+    /// used by Music triggers.
     #[celeste_name = "alt_music"] // nice consistency there
     pub alt_music: String,
     /// Alternate gravity. Behavior may be unstable in different game versions.
@@ -160,7 +166,8 @@ pub struct Level {
     pub bg: BGSolids,
     pub entities: Entities,
     pub triggers: Triggers,
-    /// Optional, as some serializers (such as older versions of Maple) don't include these.
+    /// Optional, as some serializers (such as older versions of Maple) don't
+    /// include these.
     pub objtiles: Option<ObjTiles>,
     /// All children that failed to parse.
     #[celeste_child_vec]
@@ -177,14 +184,15 @@ pub struct Levels {
     pub invalid_levels: Vec<BinEl>,
 }
 
-/// A chapter, also known as an Area in the game's code. `Map` was chosen to avoid confusion.
-/// Parsed via the `BinElType` trait.
+/// A chapter, also known as an Area in the game's code. `Map` was chosen to
+/// avoid confusion. Parsed via the `BinElType` trait.
 #[derive(Clone, PartialEq, Debug, Default, BinElType)]
 #[celeste_name = "Map"]
 pub struct Map {
     pub style: Stylegrounds,
     pub levels: Levels,
     pub filler: Filler,
-    /// Optional, as it is an Everest extension, and thus many maps do not include it.
+    /// Optional, as it is an Everest extension, and thus many maps do not
+    /// include it.
     pub meta: Option<Meta>,
 }

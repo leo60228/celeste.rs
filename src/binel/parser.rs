@@ -113,7 +113,8 @@ where
     ))
 }
 
-/// Parse a `BinEl` from a `&[u8]`. Tested solely in integration tests due to complexity.
+/// Parse a `BinEl` from a `&[u8]`. Tested solely in integration tests due to
+/// complexity.
 pub fn take_element<'a: 'b, 'b, E>(
     lookup: &'b [String],
 ) -> impl Fn(&'a [u8]) -> IResult<&'a [u8], BinEl, E> + 'b
@@ -158,7 +159,8 @@ where
     }
 }
 
-/// Parse a `BinFile` from a `&[u8]`. Tested solely in integration tests due to complexity.
+/// Parse a `BinFile` from a `&[u8]`. Tested solely in integration tests due to
+/// complexity.
 pub fn take_file<'a, E>(buf: &'a [u8]) -> IResult<&'a [u8], BinFile, E>
 where
     E: ParseError<&'a [u8]>,

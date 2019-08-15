@@ -5,7 +5,8 @@ use std::prelude::v1::*;
 /// `parser` parses `BinaryElement` files.
 pub mod parser;
 
-/// `writer` writes `BinaryElement` files. Only available when the `std` feature is enabled (default).
+/// `writer` writes `BinaryElement` files. Only available when the `std` feature
+/// is enabled (default).
 #[cfg(feature = "std")]
 pub mod writer;
 
@@ -19,7 +20,8 @@ pub struct BinFile {
     pub root: BinEl,
 }
 
-/// A value stored in an attribute inside a `BinEl`. Unlike XML, attributes are strongly typed.
+/// A value stored in an attribute inside a `BinEl`. Unlike XML, attributes are
+/// strongly typed.
 #[derive(Debug, PartialEq, Clone)]
 pub enum BinElAttr {
     Bool(bool),
