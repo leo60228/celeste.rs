@@ -23,6 +23,8 @@ pub enum Error<'a> {
     },
     #[snafu(display("Incomplete data when parsing file"))]
     Incomplete,
+    #[doc(hidden)]
+    __NonExhaustive,
 }
 
 impl Error<'_> {
