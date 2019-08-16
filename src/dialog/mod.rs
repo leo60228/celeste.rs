@@ -12,6 +12,18 @@ pub mod writer;
 #[shrinkwrap(mutable)]
 pub struct Dialog<'a>(pub IndexMap<&'a str, DialogEntry<'a>>);
 
+impl<'a> Extend<DialogKey<'a>> for Dialog<'a> {
+    fn extend<I: IntoIterator<Item = DialogKey<'a>>>(&mut self, iter: I) {
+        self.0.extend(iter.into_iter().map(<_ as Into<(_, _)>>::into))
+    }
+}
+
+impl<'a> Extend<(&'a str, DialogEntry<'a>)> for Dialog<'a> {
+    fn extend<I: IntoIterator<Item = (&'a str, DialogEntry<'a>)>>(&mut self, iter: I) {
+        self.0.extend(iter.into_iter())
+    }
+}
+
 impl<'a> FromIterator<DialogKey<'a>> for Dialog<'a> {
     fn from_iter<I: IntoIterator<Item = DialogKey<'a>>>(iter: I) -> Self {
         Dialog(iter.into_iter().map(Into::into).collect())
