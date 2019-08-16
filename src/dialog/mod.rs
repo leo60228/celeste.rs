@@ -1,6 +1,6 @@
 use derive_more::{From, Into};
-use hashbrown::{hash_map, HashMap};
 use shrinkwraprs::Shrinkwrap;
+use indexmap::map::{self, IndexMap};
 use std::borrow::Cow;
 use std::iter::{self, FromIterator};
 use std::prelude::v1::*;
@@ -10,7 +10,7 @@ pub mod writer;
 
 #[derive(PartialEq, Eq, Debug, From, Into, Shrinkwrap)]
 #[shrinkwrap(mutable)]
-pub struct Dialog<'a>(pub HashMap<&'a str, DialogEntry<'a>>);
+pub struct Dialog<'a>(pub IndexMap<&'a str, DialogEntry<'a>>);
 
 impl<'a> FromIterator<DialogKey<'a>> for Dialog<'a> {
     fn from_iter<I: IntoIterator<Item = DialogKey<'a>>>(iter: I) -> Self {
@@ -29,8 +29,8 @@ type KeyRefTuple<'a, 'b> = (&'b &'a str, &'b DialogEntry<'a>);
 type TupleToKey<'a> = fn(KeyTuple<'a>) -> DialogKey<'a>;
 type RefTupleToKey<'a, 'b> = fn(KeyRefTuple<'a, 'b>) -> DialogKey<'a>;
 
-type DialogIntoIter<'a> = hash_map::IntoIter<&'a str, DialogEntry<'a>>;
-type DialogIter<'a, 'b> = hash_map::Iter<'b, &'a str, DialogEntry<'a>>;
+type DialogIntoIter<'a> = map::IntoIter<&'a str, DialogEntry<'a>>;
+type DialogIter<'a, 'b> = map::Iter<'b, &'a str, DialogEntry<'a>>;
 
 pub struct IntoIter<'a>(iter::Map<DialogIntoIter<'a>, TupleToKey<'a>>);
 
@@ -72,7 +72,7 @@ impl<'a, 'b> IntoIterator for &'b Dialog<'a> {
 
 impl<'a> Dialog<'a> {
     pub fn new() -> Self {
-        Dialog(HashMap::new())
+        Dialog(IndexMap::new())
     }
 
     pub fn insert<'b: 'a>(&mut self, key: DialogKey<'b>) -> Option<DialogKey<'a>> {
