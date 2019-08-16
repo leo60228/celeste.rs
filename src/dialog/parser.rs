@@ -133,7 +133,7 @@ mod tests {
         let DialogKey(name, entry) = opt.unwrap();
         assert_eq!(rem, "DEF=");
         assert_eq!(name, "ABC");
-        assert_eq!(entry.unindent(), "123\n\n456\n");
+        assert_eq!(entry.unindent(), "123\n\n456");
     }
 
     #[test]
@@ -142,7 +142,7 @@ mod tests {
         let DialogKey(name, entry) = opt.unwrap();
         assert_eq!(rem, "\tDEF=");
         assert_eq!(name, "ABC");
-        assert_eq!(entry.unindent(), "123\n");
+        assert_eq!(entry.unindent(), "123");
     }
 
     #[test]
@@ -195,7 +195,7 @@ mod tests {
         let output =
             super::parse_entries::<VerboseError<_>>("\tABC=\n\t\t1\\#23\n\n\tDEF=\t456").unwrap();
         assert_eq!(output, ("", map.into()));
-        assert_eq!(output.1["ABC"].unindent(), "1#23\n\n");
+        assert_eq!(output.1["ABC"].unindent(), "1\\#23");
     }
 
     #[rustfmt::skip]

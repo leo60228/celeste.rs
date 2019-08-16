@@ -240,6 +240,6 @@ mod tests {
             indented_str: slice,
             level: 1,
         };
-        assert_eq!(entry.unindent(), Cow::Borrowed("123\n456\n").into_owned());
+        assert_eq!(entry.unindent(), Cow::Borrowed("123\n456").into_owned());
     }
 }
