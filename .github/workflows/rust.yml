@@ -12,8 +12,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@master
+    - name: Update Rust
+      run: rustup update
     - name: Version
-      run: cargo --version --verbose && rustc --version --verbose
+      run: rustup --version && cargo --version --verbose && rustc --version --verbose
     - name: Build
       run: cargo build --verbose
     - name: Run tests
