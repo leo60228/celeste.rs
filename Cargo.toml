@@ -44,6 +44,8 @@ optional = true
 
 [dev-dependencies]
 env_logger = { version = "0.6.2", default-features = false }
+
+[target.'cfg(not(windows))'.dev-dependencies]
 reqwest = "0.9.19"
 openssl-sys = { version = "0.9.49", features = ["vendored"] }
 

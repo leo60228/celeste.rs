@@ -1,5 +1,7 @@
 // set CELESTE_DIALOG_URL to Celeste's English.txt
 
+#![cfg(not(windows))]
+
 use celeste::dialog::{Dialog, DialogKey, ParseExt};
 use std::env;
 use std::fmt::Write;

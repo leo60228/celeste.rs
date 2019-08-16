@@ -20,7 +20,10 @@ jobs:
       - name: Run tests
         env:
           CELESTE_DIALOG_URL: ${{ secrets.CELESTE_DIALOG_URL }} # password protected
-        run: cargo test --verbose && cargo test --verbose -- --ignored
+        run: cargo test --verbose 
+      - name: Run ignored tests
+        if: matrix.os != 'windows-latest'
+        run: cargo test --verbose -- --ignored
   lint:
     name: lint
     runs-on: ubuntu-latest
