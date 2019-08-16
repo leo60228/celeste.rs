@@ -2,7 +2,6 @@ use derive_more::{From, Into};
 use hashbrown::{hash_map, HashMap};
 use shrinkwraprs::Shrinkwrap;
 use std::borrow::Cow;
-use std::cmp;
 use std::iter::{self, FromIterator};
 use std::prelude::v1::*;
 
@@ -109,30 +108,51 @@ pub struct DialogEntry<'a> {
 
 impl DialogEntry<'_> {
     pub fn unindent(&self) -> Cow<str> {
-        let is_line = |&s: &&str| s != "" && s != "\n" && s != "\r\n";
-
-        if self.level == 0 || self.indented_str.lines().filter(is_line).count() <= 1 {
-            match self.indented_str.chars().nth(0) {
-                Some('\r') => &self.indented_str[(self.level + 2)..],
-                Some('\n') => &self.indented_str[(self.level + 1)..],
-                _ => &self.indented_str[self.level..],
+        let mut counter = 0;
+        let trim = move |c| {
+            if counter < self.level && (c == '\t' || c == ' ') {
+                counter += 1;
+                true
+            } else {
+                false
             }
+        };
+
+        if (self.level == 0 || self.indented_str.trim_start().lines().count() <= 1)
+            && !self.indented_str.contains('#')
+        {
+            match self.indented_str.chars().nth(0) {
+                Some('\r') => &self.indented_str[2..],
+                Some('\n') => &self.indented_str[1..],
+                _ => self.indented_str,
+            }
+            .trim_start_matches(trim)
             .into()
         } else {
-            self.indented_str
+            let mut string = String::with_capacity(self.indented_str.len());
+
+            for line in self
+                .indented_str
+                .trim_start()
                 .lines()
-                .enumerate()
-                .map(|(i, s)| {
-                    if i == 0 {
-                        s
-                    } else {
-                        &s[cmp::min(self.level, s.len())..]
+                .map(|s| s.trim_start_matches(trim))
+            {
+                if line.contains('#') {
+                    let mut chars = line.chars().peekable();
+                    while let Some(chr) = chars.next() {
+                        if chr == '\\' && chars.peek() == Some(&'#') {
+                            string.push('#');
+                            let _ = chars.next();
+                        } else {
+                            string.push(chr);
+                        }
                     }
-                })
-                .filter(is_line)
-                .collect::<Vec<&str>>()
-                .join("\n")
-                .into()
+                } else {
+                    string.push_str(line);
+                }
+                string.push('\n');
+            }
+            string.into()
         }
     }
 }
@@ -171,6 +191,6 @@ mod tests {
             indented_str: slice,
             level: 1,
         };
-        assert_eq!(entry.unindent(), Cow::Borrowed("123\n456").into_owned());
+        assert_eq!(entry.unindent(), Cow::Borrowed("123\n456\n").into_owned());
     }
 }

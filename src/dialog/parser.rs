@@ -3,26 +3,37 @@ use std::prelude::v1::*;
 use super::{Dialog, DialogEntry, DialogKey};
 use nom::branch::alt;
 use nom::bytes::complete::{tag, take_till};
-use nom::character::complete::line_ending;
-use nom::combinator::{flat_map, iterator, map};
+use nom::character::complete::{line_ending, not_line_ending};
+use nom::combinator::{flat_map, iterator, map, opt};
+use nom::error::ParseError;
 use nom::multi::fold_many0;
-use nom::sequence::separated_pair;
+use nom::sequence::{pair, separated_pair};
 use nom::IResult;
 
-pub fn entry_name<'a>(inp: &'a str) -> IResult<&'a str, &'a str> {
+pub fn entry_name<'a, E>(inp: &'a str) -> IResult<&'a str, &'a str, E>
+where
+    E: ParseError<&'a str>,
+{
     take_till(|c| c == '=')(inp)
 }
 
-pub fn entry_text<'a>(level: usize) -> impl Fn(&'a str) -> IResult<&'a str, DialogEntry<'a>> {
+pub fn entry_text<'a, E>(level: usize) -> impl Fn(&'a str) -> IResult<&'a str, DialogEntry<'a>, E>
+where
+    E: ParseError<&'a str>,
+{
     move |inp| {
         let inp = inp.trim_start_matches(&[' ', '\t'] as &[char]);
-        let mut first = inp.chars().nth(0);
+        let mut first;
         let mut taken = 0;
         let mut rem = inp;
         'outer: loop {
+            first = rem.chars().nth(0);
+            let mut esc = false;
             while first != Some('\r') && first != Some('\n') {
                 rem = match first {
+                    Some('#') if !esc => break 'outer,
                     Some(c) => {
+                        esc = c == '{' || c == '\\';
                         taken += c.len_utf8();
                         &inp[taken..]
                     }
@@ -30,12 +41,19 @@ pub fn entry_text<'a>(level: usize) -> impl Fn(&'a str) -> IResult<&'a str, Dial
                 };
                 first = rem.chars().nth(0);
             }
-            taken += match first {
-                Some('\r') => 2,
-                Some('\n') => 1,
-                _ => 0,
-            };
-            rem = &inp[taken..];
+            while first == Some('\r') || first == Some('\n') {
+                taken += match first {
+                    Some('\r') => 2,
+                    Some('\n') => 1,
+                    _ => 0,
+                };
+                rem = &inp[taken..];
+                first = rem.chars().nth(0);
+            }
+            if rem.chars().next() == Some('#') {
+                break 'outer;
+            }
+            let backtrack = taken;
             for _ in 0..level {
                 first = rem.chars().nth(0);
                 rem = match first {
@@ -43,16 +61,14 @@ pub fn entry_text<'a>(level: usize) -> impl Fn(&'a str) -> IResult<&'a str, Dial
                         taken += c.len_utf8();
                         &inp[taken..]
                     }
-                    Some(_) => break 'outer,
-                    None => break 'outer,
+                    _ => {
+                        taken = backtrack;
+                        break 'outer;
+                    }
                 };
             }
-            rem = &inp[..taken];
         }
-        let last = inp.bytes().nth(taken - 1);
-        if last == Some(b'\r') || last == Some(b'\n') {
-            taken -= 1;
-        }
+        rem = &inp[taken..];
         Ok((
             rem,
             DialogEntry {
@@ -63,32 +79,44 @@ pub fn entry_text<'a>(level: usize) -> impl Fn(&'a str) -> IResult<&'a str, Dial
     }
 }
 
-pub fn parse_entry<'a>(level: usize) -> impl Fn(&'a str) -> IResult<&'a str, DialogKey<'a>> {
-    map(
-        separated_pair(entry_name, tag("="), entry_text(level + 1)),
-        Into::into,
-    )
+pub fn parse_entry<'a, E>(
+    level: usize,
+) -> impl Fn(&'a str) -> IResult<&'a str, Option<DialogKey<'a>>, E>
+where
+    E: ParseError<&'a str>,
+{
+    move |inp| {
+        if inp.chars().next() != Some('#') {
+            map(
+                separated_pair(entry_name, tag("="), entry_text(level + 1)),
+                |pair| Some(pair.into()),
+            )(inp)
+        } else {
+            map(pair(not_line_ending, opt(line_ending)), |_| None)(inp)
+        }
+    }
 }
 
-pub fn parse_entries<'a>(inp: &'a str) -> IResult<&'a str, Dialog<'a>> {
+pub fn parse_entries<'a, E>(inp: &'a str) -> IResult<&'a str, Dialog<'a>, E>
+where
+    E: ParseError<&'a str> + Clone,
+{
     let mut iter = iterator(
         inp,
         flat_map(
             fold_many0(
                 alt((tag(" "), tag("\t"), line_ending)),
                 0,
-                |acc: usize, item| {
-                    if item == " " || item == "\t" {
-                        acc + 1
-                    } else {
-                        acc
-                    }
+                |acc: usize, item| match item {
+                    "\n" => 0,
+                    " " | "\t" => acc + 1,
+                    _ => acc,
                 },
             ),
             parse_entry,
         ),
     );
-    let dialog = iter.collect();
+    let dialog = iter.flatten().collect();
     Ok((iter.finish()?.0, dialog))
 }
 
@@ -96,22 +124,32 @@ pub fn parse_entries<'a>(inp: &'a str) -> IResult<&'a str, Dialog<'a>> {
 mod tests {
     use crate::dialog::*;
     use hashbrown::HashMap;
+    use nom::error::VerboseError;
 
     #[test]
     fn dialog_entry() {
-        let (rem, DialogKey(name, entry)) =
-            super::parse_entry(1)("ABC=\n\t\t123\n\n\t\tDEF=").unwrap();
-        assert_eq!(rem, "\n\t\tDEF=");
+        let (rem, opt) =
+            super::parse_entry::<VerboseError<_>>(1)("ABC=\n\t\t123\n\n\t\t456\nDEF=").unwrap();
+        let DialogKey(name, entry) = opt.unwrap();
+        assert_eq!(rem, "DEF=");
         assert_eq!(name, "ABC");
-        assert_eq!(entry.unindent(), "123");
+        assert_eq!(entry.unindent(), "123\n\n456\n");
     }
 
     #[test]
     fn short_dialog_entry() {
-        let (rem, DialogKey(name, entry)) = super::parse_entry(1)("ABC=123\n\tDEF=").unwrap();
-        assert_eq!(rem, "DEF=");
+        let (rem, opt) = super::parse_entry::<VerboseError<_>>(1)("ABC=123\n\tDEF=").unwrap();
+        let DialogKey(name, entry) = opt.unwrap();
+        assert_eq!(rem, "\tDEF=");
         assert_eq!(name, "ABC");
-        assert_eq!(entry.unindent(), "123");
+        assert_eq!(entry.unindent(), "123\n");
+    }
+
+    #[test]
+    fn comment() {
+        let (rem, opt) = super::parse_entry::<VerboseError<_>>(1)("# asdfasdf = 123").unwrap();
+        assert_eq!(opt, None);
+        assert_eq!(rem, "");
     }
 
     #[test]
@@ -120,7 +158,7 @@ mod tests {
         map.insert(
             "ABC",
             DialogEntry {
-                indented_str: "\n\t123",
+                indented_str: "\n\t123\n",
                 level: 1,
             },
         );
@@ -132,7 +170,7 @@ mod tests {
             },
         );
         assert_eq!(
-            super::parse_entries("ABC=\n\t123\nDEF=456").unwrap(),
+            super::parse_entries::<VerboseError::<_>>("ABC=\n\t123\nDEF=456").unwrap(),
             ("", map.into())
         );
     }
@@ -143,7 +181,7 @@ mod tests {
         map.insert(
             "ABC",
             DialogEntry {
-                indented_str: "\n\t\t123",
+                indented_str: "\n\t\t1\\#23\n\n",
                 level: 2,
             },
         );
@@ -154,8 +192,50 @@ mod tests {
                 level: 2,
             },
         );
+        let output =
+            super::parse_entries::<VerboseError<_>>("\tABC=\n\t\t1\\#23\n\n\tDEF=\t456").unwrap();
+        assert_eq!(output, ("", map.into()));
+        assert_eq!(output.1["ABC"].unindent(), "1#23\n\n");
+    }
+
+    #[rustfmt::skip]
+    #[test]
+    fn theo_bug() {
+        let input = concat!(
+            "\t",
+            r#"CH6_THEO_ASK_DEFENSE=
+  [THEO left wtf]
+  So you want to destroy this {+PART_OF_YOU}?
+ CH6_THEO_SAY_DEFENSE=
+  [THEO left wtf]
+  So you want to destroy this {+PART_OF_YOU}?"#
+        );
+        let correct_a = r#"
+  [THEO left wtf]
+  So you want to destroy this {+PART_OF_YOU}?"#;
+        let correct_b = concat!(
+            r#"
+  [THEO left wtf]
+  So you want to destroy this {+PART_OF_YOU}?"#,
+            "\n"
+        );
+        let mut map = HashMap::new();
+        map.insert(
+            "CH6_THEO_ASK_DEFENSE",
+            DialogEntry {
+                indented_str: correct_b,
+                level: 2,
+            },
+        );
+        map.insert(
+            "CH6_THEO_SAY_DEFENSE",
+            DialogEntry {
+                indented_str: correct_a,
+                level: 2,
+            },
+        );
         assert_eq!(
-            super::parse_entries("\tABC=\n\t\t123\n\n\tDEF=\t456").unwrap(),
+            super::parse_entries::<VerboseError::<_>>(input).unwrap(),
             ("", map.into())
         );
     }

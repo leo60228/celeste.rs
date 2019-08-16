@@ -4,9 +4,15 @@ use std::prelude::v1::*;
 use std::result::Result as StdResult;
 
 #[cfg(feature = "std")]
-use std::io;
+use std::{io, sync::Arc};
 
-#[derive(Debug, Snafu)]
+#[cfg(feature = "std")]
+use arc_io_error::IoError;
+
+#[cfg(feature = "std")]
+use std::error::Error as StdError;
+
+#[derive(Debug, Snafu, Clone)]
 pub enum Error<'a> {
     #[snafu(display("Could not parse BinEl `{}`", name))]
     InvalidBinEl {
@@ -15,11 +21,16 @@ pub enum Error<'a> {
     },
     #[cfg(feature = "std")]
     #[snafu(display("Error writing file: {}", source))]
-    Write { source: io::Error },
-    #[snafu(display("Error parsing file: {:?}", source))]
-    Parse {
+    Write { source: IoError },
+    #[snafu(display("Error parsing BinEl: {:?}", source))]
+    ParseBinEl {
         #[snafu(source(false))]
         source: (&'a [u8], nom::error::ErrorKind),
+    },
+    #[snafu(display("Error parsing Dialog: {:?}", source))]
+    ParseDialog {
+        #[snafu(source(false))]
+        source: (&'a str, nom::error::ErrorKind),
     },
     #[snafu(display("Incomplete data when parsing file"))]
     Incomplete,
@@ -43,9 +54,9 @@ impl Error<'_> {
     }
 
     #[cfg(feature = "std")]
-    pub fn io(kind: io::ErrorKind, text: String) -> Self {
+    pub fn io(kind: io::ErrorKind, text: impl Into<Box<dyn StdError + Send + Sync>>) -> Self {
         Error::Write {
-            source: io::Error::new(kind, text),
+            source: IoError::new(kind, Arc::from(text.into())),
         }
     }
 }
@@ -53,7 +64,9 @@ impl Error<'_> {
 #[cfg(feature = "std")]
 impl From<io::Error> for Error<'_> {
     fn from(source: io::Error) -> Self {
-        Error::Write { source }
+        Error::Write {
+            source: source.into(),
+        }
     }
 }
 
@@ -70,12 +83,24 @@ impl<'a> From<nom::Err<Error<'a>>> for Error<'a> {
 
 impl<'a> nom::error::ParseError<&'a [u8]> for Error<'a> {
     fn from_error_kind(input: &'a [u8], kind: nom::error::ErrorKind) -> Self {
-        Error::Parse {
+        Error::ParseBinEl {
             source: (input, kind),
         }
     }
 
     fn append(input: &'a [u8], kind: nom::error::ErrorKind, _other: Self) -> Self {
+        Self::from_error_kind(input, kind)
+    }
+}
+
+impl<'a> nom::error::ParseError<&'a str> for Error<'a> {
+    fn from_error_kind(input: &'a str, kind: nom::error::ErrorKind) -> Self {
+        Error::ParseDialog {
+            source: (input, kind),
+        }
+    }
+
+    fn append(input: &'a str, kind: nom::error::ErrorKind, _other: Self) -> Self {
         Self::from_error_kind(input, kind)
     }
 }
