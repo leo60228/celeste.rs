@@ -1,6 +1,6 @@
 use derive_more::{From, Into};
-use shrinkwraprs::Shrinkwrap;
 use indexmap::map::{self, IndexMap};
+use shrinkwraprs::Shrinkwrap;
 use std::borrow::Cow;
 use std::iter::{self, FromIterator};
 use std::prelude::v1::*;
@@ -14,7 +14,8 @@ pub struct Dialog<'a>(pub IndexMap<&'a str, DialogEntry<'a>>);
 
 impl<'a> Extend<DialogKey<'a>> for Dialog<'a> {
     fn extend<I: IntoIterator<Item = DialogKey<'a>>>(&mut self, iter: I) {
-        self.0.extend(iter.into_iter().map(<_ as Into<(_, _)>>::into))
+        self.0
+            .extend(iter.into_iter().map(<_ as Into<(_, _)>>::into))
     }
 }
 
