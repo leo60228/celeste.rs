@@ -1,3 +1,5 @@
+#![allow(missing_docs)]
+
 use crate::binel::serialize::*;
 use crate::binel::*;
 use std::prelude::v1::*;

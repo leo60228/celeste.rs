@@ -9,17 +9,18 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-
     steps:
-    - uses: actions/checkout@master
-    - name: Update Rust
-      run: rustup update
-    - name: Version
-      run: rustup --version && cargo --version --verbose && rustc --version --verbose
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
+      - uses: actions/checkout@master
+      - name: Update Rust
+        run: rustup update
+      - name: Version
+        run: rustup --version && cargo --version --verbose && rustc --version --verbose
+      - name: Build
+        run: cargo build --verbose
+      - name: Run tests
+        env:
+          CELESTE_DIALOG_URL: ${{ secrets.CELESTE_DIALOG_URL }} # password protected
+        run: cargo test --verbose && cargo test --verbose -- --ignored
   lint:
     name: lint
     runs-on: ubuntu-latest

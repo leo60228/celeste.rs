@@ -5,9 +5,11 @@ use crate::{Error, Result};
 pub use celeste_derive::*;
 
 /// A value for serializing and deserializing to and from `BinEl`s.
+#[allow(missing_docs)]
 pub enum BinElValue {
     Attribute(BinElAttr),
     Element(BinEl),
+    /// Necessary for the derive to work properly.
     None,
 }
 

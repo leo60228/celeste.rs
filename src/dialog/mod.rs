@@ -1,16 +1,53 @@
+use crate::{Error, Result};
 use derive_more::{From, Into};
 use indexmap::map::{self, IndexMap};
 use shrinkwraprs::Shrinkwrap;
 use std::borrow::Cow;
+use std::convert::{TryFrom, TryInto};
 use std::iter::{self, FromIterator};
 use std::prelude::v1::*;
 
-pub mod parser;
-pub mod writer;
+mod parser;
+mod writer;
 
+/// A dialog file.
 #[derive(PartialEq, Eq, Debug, From, Into, Shrinkwrap)]
 #[shrinkwrap(mutable)]
 pub struct Dialog<'a>(pub IndexMap<&'a str, DialogEntry<'a>>);
+
+impl<'a> TryFrom<&'a str> for Dialog<'a> {
+    type Error = Error<'a>;
+
+    fn try_from(s: &'a str) -> Result<Self> {
+        Ok(parser::parse_entries(s)?.1)
+    }
+}
+
+/// Parse a `Dialog` from a string. Implemented as an extension trait since
+/// FromStr doesn't support lifetimes.
+pub trait ParseExt<'a>: private::Parseable {
+    /// Parse.
+    fn parse(&'a self) -> Result<Dialog<'a>>;
+}
+
+impl<'a> ParseExt<'a> for str {
+    fn parse(&'a self) -> Result<Dialog<'a>> {
+        self.try_into()
+    }
+}
+
+impl<'a> ParseExt<'a> for String {
+    fn parse(&'a self) -> Result<Dialog<'a>> {
+        (&*self as &str).try_into()
+    }
+}
+
+mod private {
+    pub trait Parseable {}
+
+    impl Parseable for str {}
+    impl Parseable for String {}
+}
 
 impl<'a> Extend<DialogKey<'a>> for Dialog<'a> {
     fn extend<I: IntoIterator<Item = DialogKey<'a>>>(&mut self, iter: I) {
@@ -45,6 +82,7 @@ type RefTupleToKey<'a, 'b> = fn(KeyRefTuple<'a, 'b>) -> DialogKey<'a>;
 type DialogIntoIter<'a> = map::IntoIter<&'a str, DialogEntry<'a>>;
 type DialogIter<'a, 'b> = map::Iter<'b, &'a str, DialogEntry<'a>>;
 
+/// Returned by `Dialog::into_iter`.
 pub struct IntoIter<'a>(iter::Map<DialogIntoIter<'a>, TupleToKey<'a>>);
 
 impl<'a> Iterator for IntoIter<'a> {
@@ -55,6 +93,7 @@ impl<'a> Iterator for IntoIter<'a> {
     }
 }
 
+/// Returned by `Dialog::iter`.
 pub struct Iter<'a, 'b>(iter::Map<DialogIter<'a, 'b>, RefTupleToKey<'a, 'b>>);
 
 impl<'a> Iterator for Iter<'a, '_> {
@@ -84,15 +123,18 @@ impl<'a, 'b> IntoIterator for &'b Dialog<'a> {
 }
 
 impl<'a> Dialog<'a> {
+    /// Create an empty `Dialog`.
     pub fn new() -> Self {
         Dialog(IndexMap::new())
     }
 
+    /// Insert a new key into the struct.
     pub fn insert<'b: 'a>(&mut self, key: DialogKey<'b>) -> Option<DialogKey<'a>> {
         let DialogKey(name, entry) = key;
         self.0.insert(name, entry).map(|e| DialogKey(key.0, e))
     }
 
+    /// Iterate over each key.
     pub fn iter(&self) -> <&Self as IntoIterator>::IntoIter {
         self.into_iter()
     }
@@ -104,6 +146,7 @@ impl Default for Dialog<'_> {
     }
 }
 
+/// A dialog key, with a name and contents.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, From, Into)]
 pub struct DialogKey<'a>(pub &'a str, pub DialogEntry<'a>);
 
@@ -113,13 +156,18 @@ impl<'a, 'b> From<KeyRefTuple<'a, 'b>> for DialogKey<'a> {
     }
 }
 
+/// A dialog entry, containing the raw string and the indentation level.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
 pub struct DialogEntry<'a> {
+    /// The indented string of dialog.
     pub indented_str: &'a str,
+    /// The indentation level of the entry.
     pub level: usize,
 }
 
 impl DialogEntry<'_> {
+    /// Remove the indentation from the DialogEntry. Returns a subslice if
+    /// possible, and returns a freshly allocated `String` otherwise.
     pub fn unindent(&self) -> Cow<str> {
         let mut counter = 0;
         let trim = move |c| {
@@ -131,15 +179,14 @@ impl DialogEntry<'_> {
             }
         };
 
-        if (self.level == 0 || self.indented_str.trim_start().lines().count() <= 1)
-            && !self.indented_str.contains('#')
-        {
+        if self.level == 0 || self.indented_str.trim_start().lines().count() <= 1 {
             match self.indented_str.chars().nth(0) {
                 Some('\r') => &self.indented_str[2..],
                 Some('\n') => &self.indented_str[1..],
                 _ => self.indented_str,
             }
             .trim_start_matches(trim)
+            .trim_end()
             .into()
         } else {
             let mut string = String::with_capacity(self.indented_str.len());
@@ -150,21 +197,10 @@ impl DialogEntry<'_> {
                 .lines()
                 .map(|s| s.trim_start_matches(trim))
             {
-                if line.contains('#') {
-                    let mut chars = line.chars().peekable();
-                    while let Some(chr) = chars.next() {
-                        if chr == '\\' && chars.peek() == Some(&'#') {
-                            string.push('#');
-                            let _ = chars.next();
-                        } else {
-                            string.push(chr);
-                        }
-                    }
-                } else {
-                    string.push_str(line);
-                }
+                string.push_str(line);
                 string.push('\n');
             }
+            string.truncate(string.trim_end().len());
             string.into()
         }
     }

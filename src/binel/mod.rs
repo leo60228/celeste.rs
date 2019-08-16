@@ -16,13 +16,16 @@ pub mod serialize;
 /// Holds `BinaryElement` files.
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct BinFile {
+    /// The file's "package". Usually the name of the file it is stored in.
     pub package: String,
+    /// The root element of the file.
     pub root: BinEl,
 }
 
 /// A value stored in an attribute inside a `BinEl`. Unlike XML, attributes are
 /// strongly typed.
 #[derive(Debug, PartialEq, Clone)]
+#[allow(missing_docs)]
 pub enum BinElAttr {
     Bool(bool),
     Int(i32),

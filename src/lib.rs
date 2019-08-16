@@ -5,6 +5,7 @@
 
 #![recursion_limit = "1024"]
 #![cfg_attr(not(feature = "std"), no_std)]
+#![warn(missing_docs)]
 
 extern crate no_std_compat as std;
 

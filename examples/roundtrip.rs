@@ -3,7 +3,7 @@ use celeste::{
     *,
 };
 
-fn main() -> Result<'static, ()> {
+fn main() -> Result<(), Error<'static>> {
     env_logger::init();
 
     let map_bytes = include_bytes!("empty.bin");

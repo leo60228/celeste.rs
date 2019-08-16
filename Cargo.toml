@@ -44,6 +44,8 @@ optional = true
 
 [dev-dependencies]
 env_logger = { version = "0.6.2", default-features = false }
+reqwest = "0.9.19"
+openssl-sys = { version = "0.9.49", features = ["vendored"] }
 
 [[example]]
 name = "roundtrip"
@@ -59,3 +61,6 @@ name = "dump_dialog"
 [[test]]
 name = "change_package"
 required-features = [ "std" ]
+
+[[test]]
+name = "roundtrip_dialog_url"
