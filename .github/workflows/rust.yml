@@ -12,6 +12,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@master
+    - name: Version
+      run: cargo --version --verbose && rustc --version --verbose
     - name: Build
       run: cargo build --verbose
     - name: Run tests
