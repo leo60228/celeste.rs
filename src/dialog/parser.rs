@@ -50,7 +50,7 @@ where
                 rem = &inp[taken..];
                 first = rem.chars().nth(0);
             }
-            if rem.chars().next() == Some('#') {
+            if rem.starts_with('#') {
                 break 'outer;
             }
             let backtrack = taken;
@@ -86,7 +86,7 @@ where
     E: ParseError<&'a str>,
 {
     move |inp| {
-        if inp.chars().next() != Some('#') {
+        if !inp.starts_with('#') {
             map(
                 separated_pair(entry_name, tag("="), entry_text(level + 1)),
                 |pair| Some(pair.into()),
