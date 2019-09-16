@@ -1,68 +1,7 @@
-[package]
-name = "celeste"
-version = "3.0.0-alpha.0"
-authors = ["leo60228 <iakornfeld@gmail.com>"]
-edition = "2018"
-description = "Crate for formats from the 2018 game Celeste."
-license = "MIT OR Apache-2.0"
-homepage = "https://github.com/leo60228/celesters"
-repository = "https://github.com/leo60228/celesters"
-
-[features]
-default = [ "derive", "std" ]
-derive = [ "celeste_derive" ]
-std = [ "no-std-compat/std", "snafu/std", "shrinkwraprs/std", "nom/std", "byteorder", "itertools/use_std", "unsigned-varint", "arc-io-error" ]
-
-[dependencies]
-nom = { version = "5.0.0", default-features = false, features = [ "alloc" ] }
-nom-varint = "0.2.1"
-unsigned-varint = { version = "0.2.2", optional = true }
-arc-io-error = { version = "0.1.1", optional = true }
-lazy_static = "1.3.0"
-log = "0.4.8"
-byteorder = { version = "1.3.2", optional = true }
-itertools = { version = "0.8.0", default-features = false }
-derive_more = "0.15.0"
-shrinkwraprs = { version = "0.2.1", default-features = false }
-no-std-compat = { version = "0.2.0", features = [ "alloc" ]}
-hashbrown = "0.6.0"
-
-[dependencies.snafu]
-git = "https://github.com/CryZe/snafu.git"
-branch = "no-std"
-default-features = false
-features = [ "rust_1_30" ]
-
-[dependencies.indexmap]
-git = "https://github.com/leo60228/indexmap.git"
-branch = "no-std"
-
-[dependencies.celeste_derive]
-version = "2.0.0-alpha.0"
-path = "celeste_derive"
-optional = true
-
-[dev-dependencies]
-env_logger = { version = "0.6.2", default-features = false }
-
-[target.'cfg(not(windows))'.dev-dependencies]
-reqwest = "0.9.19"
-openssl-sys = { version = "0.9.49", features = ["vendored"] }
-
-[[example]]
-name = "roundtrip"
-required-features = [ "std" ]
-
-[[example]]
-name = "dump_map"
-required-features = [ "derive" ]
-
-[[example]]
-name = "dump_dialog"
-
-[[test]]
-name = "change_package"
-required-features = [ "std" ]
-
-[[test]]
-name = "roundtrip_dialog_url"
+[workspace]
+members = [
+    "celeste",
+    "celeste_derive",
+    "ghastly",
+    "bridge",
+]

@@ -42,7 +42,7 @@ jobs:
           displayName: Clippy
         - script: rustup install nightly && rustup component add rustfmt --toolchain nightly
           displayName: Install Rustfmt
-        - bash: cargo +nightly fmt --all -- --check && cd celeste_derive/ && cargo +nightly fmt --all -- --check
+        - bash: cargo +nightly fmt --all -- --check
           displayName: Rustfmt
 
     ${{ if eq(parameters.toolchain, 'nightly') }}:

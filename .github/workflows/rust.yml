@@ -16,14 +16,14 @@ jobs:
       - name: Version
         run: rustup --version && cargo --version --verbose && rustc --version --verbose
       - name: Build
-        run: cargo build --verbose
+        run: cargo build --all --verbose
       - name: Run tests
-        run: cargo test --verbose 
+        run: cargo test --all --verbose 
       - name: Run ignored tests
         if: matrix.os != 'windows-latest'
         env:
           CELESTE_DIALOG_URL: ${{ secrets.CELESTE_DIALOG_URL }} # password protected
-        run: cargo test --verbose -- --ignored
+        run: cargo test --all --verbose -- --ignored
   lint:
     name: lint
     runs-on: ubuntu-latest

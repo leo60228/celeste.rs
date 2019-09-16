@@ -1,0 +1,23 @@
+[package]
+name = "ghastly"
+version = "0.1.0"
+authors = ["leo60228 <iakornfeld@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+async-std = "0.99.4"
+futures-preview = { version = "0.3.0-alpha.18", features = ["async-await", "nightly", "compat"] }
+slice-deque = "0.2.4"
+nom = "5.0.1"
+smallvec = "0.6.10"
+futures-intrusive = "0.2.0"
+broadcaster = "0.2.4"
+
+[dependencies.futures01]
+package = "futures"
+version = "0.1"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies.celeste]
+path = "../celeste"

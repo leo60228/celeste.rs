@@ -22,5 +22,7 @@ pub mod maps;
 /// `dialog` handles Celeste's dialog files.
 pub mod dialog;
 
+pub mod ghostnet;
+
 mod error;
 pub use error::*;

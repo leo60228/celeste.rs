@@ -13,7 +13,9 @@ mod writer;
 /// A dialog file.
 #[derive(PartialEq, Eq, Debug, From, Into, Shrinkwrap)]
 #[shrinkwrap(mutable)]
-pub struct Dialog<'a>(pub IndexMap<&'a str, DialogEntry<'a>>);
+pub struct Dialog<'a>(
+    pub IndexMap<&'a str, DialogEntry<'a>, hashbrown::hash_map::DefaultHashBuilder>,
+);
 
 impl<'a> TryFrom<&'a str> for Dialog<'a> {
     type Error = Error<'a>;
@@ -125,7 +127,7 @@ impl<'a, 'b> IntoIterator for &'b Dialog<'a> {
 impl<'a> Dialog<'a> {
     /// Create an empty `Dialog`.
     pub fn new() -> Self {
-        Dialog(IndexMap::new())
+        iter::empty::<DialogKey<'a>>().collect()
     }
 
     /// Insert a new key into the struct.
