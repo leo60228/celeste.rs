@@ -125,7 +125,7 @@ pub async fn ghostnet(
                                 if req.id == ChunkType::MPlayer {
                                     println!("responding");
                                     let player = ChunkData::MPlayer(MPlayer {
-                                        name: "leobot",
+                                        name: "leobot".into(),
                                         ..Default::default()
                                     });
                                     let frame = Frame {

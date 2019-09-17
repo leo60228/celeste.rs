@@ -28,6 +28,7 @@ hashbrown = "0.6.0"
 smallvec = "0.6.10"
 futures-preview = "0.3.0-alpha.18"
 shrinkwraprs = "0.2.1"
+derive-into-owned = "0.1.0"
 
 [dependencies.snafu]
 git = "https://github.com/CryZe/snafu.git"
