@@ -14,7 +14,7 @@ use futures_intrusive::channel::{
 use slice_deque::SliceDeque;
 use smallvec::*;
 use std::borrow::Cow;
-use std::collections::{HashMap, BTreeMap};
+use std::collections::{BTreeMap, HashMap};
 use std::convert::TryFrom;
 use std::net::{IpAddr, SocketAddr};
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -34,7 +34,8 @@ pub async fn server(addr: impl ToSocketAddrs + Clone) -> Result<'static, ()> {
 
     let udp_map: Arc<Mutex<HashMap<IpAddr, UnboundedSender<(SocketAddr, Vec<u8>)>>>> =
         Arc::new(Mutex::new(HashMap::new()));
-    let mplayers: Arc<Mutex<BTreeMap<u32, ([u8; 4], MPlayer<'static>)>>> = Arc::new(Mutex::new(BTreeMap::new()));
+    let mplayers: Arc<Mutex<BTreeMap<u32, ([u8; 4], MPlayer<'static>)>>> =
+        Arc::new(Mutex::new(BTreeMap::new()));
 
     let _udp_handle = task::spawn({
         let udp_map = udp_map.clone();
@@ -156,16 +157,19 @@ pub async fn handle(
         {
             let players = players.lock().await;
 
-            let player_frames: Vec<Frame> = players.values().map(|(id, player)| {
-                let head = Chunk {
-                    typ: ChunkType::HHead,
-                    data: Cow::Borrowed(id),
-                };
-                let frame = Frame {
-                    raw_chunks: smallvec![ChunkData::MPlayer(player.clone()).into(), head,],
-                };
-                frame
-            }).collect();
+            let player_frames: Vec<Frame> = players
+                .values()
+                .map(|(id, player)| {
+                    let head = Chunk {
+                        typ: ChunkType::HHead,
+                        data: Cow::Borrowed(id),
+                    };
+                    let frame = Frame {
+                        raw_chunks: smallvec![ChunkData::MPlayer(player.clone()).into(), head,],
+                    };
+                    frame
+                })
+                .collect();
 
             for frame in player_frames {
                 frame.write(&mut write).await?;
@@ -274,11 +278,16 @@ pub async fn handle(
                                             red: 255,
                                             blue: 0,
                                             green: 255,
+                                            id: chat_id.fetch_add(1, Ordering::SeqCst),
                                             ..Default::default()
                                         });
                                         let frame = Frame {
-                                            raw_chunks: smallvec![message.into()]
+                                            raw_chunks: smallvec![
+                                                ChunkData::HHead(HHead { id: 0 }).into(),
+                                                message.into()
+                                            ],
                                         };
+                                        println!("{:?}", frame);
                                         data.clear();
                                         frame.write(&mut data).await?;
                                         tcp_broadcast_tx.send(&data).await.unwrap();
@@ -322,11 +331,16 @@ pub async fn handle(
                                 red: 255,
                                 blue: 0,
                                 green: 255,
+                                id: chat_id.fetch_add(1, Ordering::SeqCst),
                                 ..Default::default()
                             });
                             let frame = Frame {
-                                raw_chunks: smallvec![message.into()]
+                                raw_chunks: smallvec![
+                                    ChunkData::HHead(HHead { id: 0 }).into(),
+                                    message.into()
+                                ],
                             };
+                            println!("{:?}", frame);
                             data.clear();
                             frame.write(&mut data).await?;
                             tcp_broadcast_tx.send(&data).await.unwrap();
