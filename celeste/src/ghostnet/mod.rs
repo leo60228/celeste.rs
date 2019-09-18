@@ -1,6 +1,7 @@
 #![allow(missing_docs)] // TODO: remove
 
 use crate::{Error, Result};
+use derive_into_owned::IntoOwned;
 use derive_more::{From, Into};
 use futures::prelude::*;
 use nom::{
@@ -113,13 +114,13 @@ impl UUpdate<'_> {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, From, Default)]
+#[derive(Debug, PartialEq, Eq, Clone, From, Default, IntoOwned)]
 pub struct MPlayer<'a> {
     pub echo: bool,
-    pub name: &'a str,
-    pub area: &'a str,
+    pub name: Cow<'a, str>,
+    pub area: Cow<'a, str>,
     pub mode: u8,
-    pub level: &'a str,
+    pub level: Cow<'a, str>,
     pub completed: bool,
     pub exit: Option<u8>,
     pub idle: bool,
@@ -130,10 +131,10 @@ impl<'a> MPlayer<'a> {
         Ok(map(
             tuple((
                 boolean,
-                null_str,
-                null_str,
+                map(null_str, Cow::Borrowed),
+                map(null_str, Cow::Borrowed),
                 le_u8,
-                null_str,
+                map(null_str, Cow::Borrowed),
                 boolean,
                 flat_map(boolean, |b| cond(b, le_u8)),
                 boolean,
@@ -149,13 +150,13 @@ impl<'a> MPlayer<'a> {
         stream
             .write_all(if self.echo { &[1] } else { &[0] })
             .await?;
-        stream.write_all(self.name.as_ref()).await?;
+        stream.write_all(self.name.as_ref().as_ref()).await?;
         stream.write_all(&[0]).await?;
-        stream.write_all(self.area.as_ref()).await?;
+        stream.write_all(self.area.as_ref().as_ref()).await?;
         stream.write_all(&[0]).await?;
         let mode_byte = [self.mode];
         stream.write_all(&mode_byte).await?;
-        stream.write_all(self.level.as_ref()).await?;
+        stream.write_all(self.level.as_ref().as_ref()).await?;
         stream.write_all(&[0]).await?;
         stream
             .write_all(if self.completed { &[1] } else { &[0] })
@@ -354,9 +355,9 @@ impl<'a> Frame<'a> {
         Default::default()
     }
 
-    pub async fn write<'b: 'a>(
+    pub async fn write(
         self,
-        stream: &'b mut (dyn AsyncWrite + Send + Sync + Unpin + 'b),
+        stream: &'_ mut (dyn AsyncWrite + Send + Sync + Unpin + '_),
     ) -> Result<'static, ()> {
         for chunk in &self.raw_chunks {
             let name: &str = chunk.typ.into();

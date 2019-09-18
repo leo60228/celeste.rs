@@ -1,26 +1,25 @@
-#![recursion_limit = "256"]
+#![recursion_limit = "1024"]
 
 use async_std::net::{TcpListener, TcpStream, ToSocketAddrs, UdpSocket};
 use async_std::task;
 use broadcaster::BroadcastChannel;
 use celeste::ghostnet::*;
 use futures::channel::mpsc::{self, UnboundedSender};
+use futures::lock::Mutex;
 use futures::prelude::*;
-use futures_intrusive::{
-    channel::{
-        shared::{state_broadcast_channel, StateReceiver, StateSender},
-        StateId,
-    },
-    sync::Mutex,
+use futures_intrusive::channel::{
+    shared::{state_broadcast_channel, StateReceiver, StateSender},
+    StateId,
 };
 use slice_deque::SliceDeque;
 use smallvec::*;
 use std::borrow::Cow;
-use std::collections::HashMap;
-use std::convert::{TryFrom, TryInto};
+use std::collections::{HashMap, BTreeMap};
+use std::convert::TryFrom;
 use std::net::{IpAddr, SocketAddr};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
+use std::sync::Mutex as SyncMutex;
 
 type Result<'a, T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync + 'a>>; // 4
 
@@ -29,12 +28,13 @@ pub async fn server(addr: impl ToSocketAddrs + Clone) -> Result<'static, ()> {
     let (udp_broadcast_tx, udp_broadcast_rx) = state_broadcast_channel::<Vec<u8>>();
 
     let listener = TcpListener::bind(addr.clone()).await?;
-    let mut incoming = listener.incoming();
+    let mut incoming = listener.incoming().fuse();
 
     let udp = Arc::new(UdpSocket::bind(addr).await?);
 
     let udp_map: Arc<Mutex<HashMap<IpAddr, UnboundedSender<(SocketAddr, Vec<u8>)>>>> =
-        Arc::new(Mutex::new(HashMap::new(), true));
+        Arc::new(Mutex::new(HashMap::new()));
+    let mplayers: Arc<Mutex<BTreeMap<u32, ([u8; 4], MPlayer<'static>)>>> = Arc::new(Mutex::new(BTreeMap::new()));
 
     let _udp_handle = task::spawn({
         let udp_map = udp_map.clone();
@@ -53,34 +53,59 @@ pub async fn server(addr: impl ToSocketAddrs + Clone) -> Result<'static, ()> {
     let mut id = 1;
     let chat_id = Arc::new(AtomicU32::new(1));
 
+    let mut mplayer_broadcast = tcp_broadcast.clone();
+
     loop {
-        let sock = incoming.next().await;
-        println!("{:?}", sock);
-        match sock {
-            None => continue,
-            Some(Err(err)) => eprintln!("error connecting to socket: {}", err),
-            Some(Ok(sock)) => {
-                println!("getting addr");
-                let addr = match sock.peer_addr() {
-                    Ok(addr) => addr,
-                    Err(_) => continue,
+        futures::select! {
+            sock = incoming.next() => {
+                println!("{:?}", sock);
+                match sock {
+                    None => continue,
+                    Some(Err(err)) => eprintln!("error connecting to socket: {}", err),
+                    Some(Ok(sock)) => {
+                        println!("getting addr");
+                        let addr = match sock.peer_addr() {
+                            Ok(addr) => addr,
+                            Err(_) => continue,
+                        };
+                        let (tx, rx) = mpsc::unbounded();
+                        println!("inserting to udp_map");
+                        udp_map.lock().await.insert(addr.ip(), tx);
+                        println!("done");
+                        let tcp_broadcast = tcp_broadcast.clone();
+                        let mplayers = mplayers.clone();
+                        let _handle = task::spawn(handle(
+                            sock,
+                            udp.clone(),
+                            rx,
+                            tcp_broadcast,
+                            (udp_broadcast_rx.clone(), udp_broadcast_tx.clone()),
+                            id,
+                            chat_id.clone(),
+                            mplayers,
+                        ));
+                        id += 1;
+                        println!("done");
+                    }
+                }
+            },
+            f = mplayer_broadcast.recv().fuse() => {
+                let buf: Vec<u8> = if let Some(f) = f { f } else { continue };
+                if let Ok((_, frame)) = frame::<()>(&buf) {
+                    let raw_chunks = frame.raw_chunks;
+                    let head = raw_chunks.iter().find(|c| c.typ == ChunkType::HHead);
+                    let player = raw_chunks.iter().find(|c| c.typ == ChunkType::MPlayer);
+                    if let (Some(head), Some(player)) = (head, player) {
+                        if let (Ok(ChunkData::HHead(head)), Ok(ChunkData::MPlayer(player))) = (ChunkData::try_from(head), ChunkData::try_from(player)) {
+                            if player.name == "" {
+                                mplayers.lock().await.remove(&head.id);
+                            } else {
+                                let bytes = head.id.to_le_bytes();
+                                mplayers.lock().await.insert(head.id, (bytes, player.into_owned()));
+                            }
+                        }
+                    }
                 };
-                let (tx, rx) = mpsc::unbounded();
-                println!("inserting to udp_map");
-                udp_map.lock().await.insert(addr.ip(), tx);
-                println!("done");
-                let tcp_broadcast = tcp_broadcast.clone();
-                let _handle = task::spawn(handle(
-                    sock,
-                    udp.clone(),
-                    rx,
-                    tcp_broadcast,
-                    (udp_broadcast_rx.clone(), udp_broadcast_tx.clone()),
-                    id,
-                    chat_id.clone(),
-                ));
-                id += 1;
-                println!("done");
             }
         }
     }
@@ -94,6 +119,7 @@ pub async fn handle(
     (udp_broadcast_rx, mut udp_broadcast_tx): (StateReceiver<Vec<u8>>, StateSender<Vec<u8>>),
     id: u32,
     chat_id: Arc<AtomicU32>,
+    players: Arc<Mutex<BTreeMap<u32, ([u8; 4], MPlayer<'static>)>>>,
 ) {
     println!("mpsc");
     let (mut response_tx, mut response_rx) = mpsc::unbounded::<Vec<u8>>();
@@ -103,7 +129,7 @@ pub async fn handle(
     let (mut read, mut write) = sock.split();
 
     println!("mutex");
-    let udp_addr = Arc::new(Mutex::new(None, true));
+    let udp_addr = Arc::new(Mutex::new(None));
 
     let send = async move {
         let head = ChunkData::HHead(HHead { id });
@@ -119,13 +145,32 @@ pub async fn handle(
 
         let head = ChunkData::HHead(HHead { id: 0 });
         let server = ChunkData::MPlayer(MPlayer {
-            name: "server",
+            name: "server".into(),
             ..Default::default()
         });
         let frame = Frame {
             raw_chunks: smallvec![server.into(), head.into(),],
         };
         frame.write(&mut write).await?;
+
+        {
+            let players = players.lock().await;
+
+            let player_frames: Vec<Frame> = players.values().map(|(id, player)| {
+                let head = Chunk {
+                    typ: ChunkType::HHead,
+                    data: Cow::Borrowed(id),
+                };
+                let frame = Frame {
+                    raw_chunks: smallvec![ChunkData::MPlayer(player.clone()).into(), head,],
+                };
+                frame
+            }).collect();
+
+            for frame in player_frames {
+                frame.write(&mut write).await?;
+            }
+        }
 
         loop {
             futures::select! {
@@ -156,6 +201,8 @@ pub async fn handle(
     let recv = async move {
         let mut buf: SliceDeque<u8> = SliceDeque::new();
         let mut start = 0;
+        let mut welcomed = false;
+        let mut player_name = None;
 
         loop {
             let unparsed;
@@ -201,12 +248,12 @@ pub async fn handle(
                                 {
                                     println!("got mplayer");
                                     chunk.echo = true;
-                                    let chunk = ChunkData::MPlayer(chunk).into();
+                                    let cdata = ChunkData::MPlayer(chunk.clone()).into();
                                     let id = id.to_le_bytes();
                                     let mut data = Vec::new();
                                     let fwd = Frame {
                                         raw_chunks: smallvec![
-                                            chunk,
+                                            cdata,
                                             Chunk {
                                                 typ: ChunkType::HHead,
                                                 data: Cow::Borrowed(&id),
@@ -217,6 +264,26 @@ pub async fn handle(
                                     println!("forwarding mplayer");
                                     tcp_broadcast_tx.send(&data).await.unwrap();
                                     println!("forwarded mplayer");
+                                    if !welcomed {
+                                        welcomed = true;
+                                        player_name = Some(chunk.name.to_string());
+                                        let welcome = format!("Welcome, {}!", chunk.name);
+                                        println!("{}", welcome);
+                                        let message = ChunkData::MChat(MChat {
+                                            text: &welcome,
+                                            red: 255,
+                                            blue: 0,
+                                            green: 255,
+                                            ..Default::default()
+                                        });
+                                        let frame = Frame {
+                                            raw_chunks: smallvec![message.into()]
+                                        };
+                                        data.clear();
+                                        frame.write(&mut data).await?;
+                                        tcp_broadcast_tx.send(&data).await.unwrap();
+                                        println!("sent welcome");
+                                    }
                                 }
                             }
                             ChunkType::Unknown(ty) => {
@@ -246,6 +313,26 @@ pub async fn handle(
                         println!("forwarding mplayer");
                         tcp_broadcast_tx.send(&data).await.unwrap();
                         println!("forwarded mplayer");
+
+                        if let Some(player_name) = player_name {
+                            let goodbye = format!("Cya, {}!", player_name);
+                            println!("{}", goodbye);
+                            let message = ChunkData::MChat(MChat {
+                                text: &goodbye,
+                                red: 255,
+                                blue: 0,
+                                green: 255,
+                                ..Default::default()
+                            });
+                            let frame = Frame {
+                                raw_chunks: smallvec![message.into()]
+                            };
+                            data.clear();
+                            frame.write(&mut data).await?;
+                            tcp_broadcast_tx.send(&data).await.unwrap();
+                            println!("sent goodbye");
+                        }
+
                         return Result::Err(
                             std::io::Error::new(
                                 std::io::ErrorKind::UnexpectedEof,

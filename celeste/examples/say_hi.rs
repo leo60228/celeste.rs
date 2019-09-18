@@ -27,7 +27,7 @@ async fn say_hi() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
     println!("{:#?}", frame_a);
 
     let id_chunk: ChunkData = MPlayer {
-        name: "leobot",
+        name: "leobot".into(),
         idle: false,
         ..Default::default()
     }
