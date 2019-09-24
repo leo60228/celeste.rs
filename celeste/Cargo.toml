@@ -46,7 +46,7 @@ path = "../celeste_derive"
 optional = true
 
 [dev-dependencies]
-env_logger = { version = "0.6.2", default-features = false }
+env_logger = { version = "0.7.0", default-features = false }
 async-std = "0.99.5"
 
 [target.'cfg(not(windows))'.dev-dependencies]
