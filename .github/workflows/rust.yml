@@ -12,10 +12,11 @@ jobs:
         rust: [beta, nightly]
     steps:
       - uses: actions/checkout@master
-      - uses: hecrj/setup-rust-action@v1
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
         with:
-          rust-version: ${{ matrix.rust }}
-      - name: Version
+            toolchain: ${{ matrix.rust }}
+            override: true
         run: rustup --version && cargo --version --verbose && rustc --version --verbose
       - name: Build
         run: cargo build --all --verbose
@@ -32,10 +33,23 @@ jobs:
 
     steps:
       - uses: actions/checkout@master
-      - uses: hecrj/setup-rust-action@v1
+      - id: rustfmt
+        uses: actions-rs/components-nightly@v1
         with:
-          rust-version: nightly
+          component: rustfmt
+      - uses: actions-rs/toolchain@v1
+        with:
+            toolchain: ${{ steps.rustfmt.outputs.toolchain }}
+            override: true
       - name: Formatting
         run: cargo fmt --all -- --check
+      - id: clippy
+        uses: actions-rs/components-nightly@v1
+        with:
+          component: clippy
+      - uses: actions-rs/toolchain@v1
+        with:
+            toolchain: ${{ steps.clippy.outputs.toolchain }}
+            override: true
       - name: Idioms
         run: cargo clippy --all -- -D clippy::all
