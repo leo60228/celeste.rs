@@ -42,6 +42,7 @@ jobs:
         with:
             toolchain: ${{ steps.rustfmt.outputs.toolchain }}
             override: true
+      - run: rustup component add rustfmt
       - name: Formatting
         run: cargo fmt --all -- --check
       - id: clippy
@@ -52,5 +53,6 @@ jobs:
         with:
             toolchain: ${{ steps.clippy.outputs.toolchain }}
             override: true
+      - run: rustup component add clippy
       - name: Idioms
         run: cargo clippy --all -- -D clippy::all
