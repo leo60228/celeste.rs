@@ -19,7 +19,7 @@ use std::convert::TryFrom;
 use std::net::{IpAddr, SocketAddr};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
-use std::sync::Mutex as SyncMutex;
+
 
 type Result<'a, T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync + 'a>>; // 4
 
@@ -117,13 +117,13 @@ pub async fn handle(
     udp: Arc<UdpSocket>,
     mut udp_recv: impl Stream<Item = (SocketAddr, Vec<u8>)> + Send + Sync + Unpin + 'static,
     mut tcp_broadcast_rx: BroadcastChannel<Vec<u8>>,
-    (udp_broadcast_rx, mut udp_broadcast_tx): (StateReceiver<Vec<u8>>, StateSender<Vec<u8>>),
+    (udp_broadcast_rx, udp_broadcast_tx): (StateReceiver<Vec<u8>>, StateSender<Vec<u8>>),
     id: u32,
     chat_id: Arc<AtomicU32>,
     players: Arc<Mutex<BTreeMap<u32, ([u8; 4], MPlayer<'static>)>>>,
 ) {
     println!("mpsc");
-    let (mut response_tx, mut response_rx) = mpsc::unbounded::<Vec<u8>>();
+    let (_response_tx, mut response_rx) = mpsc::unbounded::<Vec<u8>>();
     println!("clone");
     let tcp_broadcast_tx = tcp_broadcast_rx.clone();
     println!("split");
