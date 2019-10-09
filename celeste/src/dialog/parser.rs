@@ -154,7 +154,7 @@ mod tests {
 
     #[test]
     fn dialog_entries() {
-        let mut map = IndexMap::new();
+        let mut map = IndexMap::default();
         map.insert(
             "ABC",
             DialogEntry {
@@ -177,7 +177,7 @@ mod tests {
 
     #[test]
     fn indented_dialog_entries() {
-        let mut map = IndexMap::new();
+        let mut map = IndexMap::default();
         map.insert(
             "ABC",
             DialogEntry {
@@ -219,7 +219,7 @@ mod tests {
   So you want to destroy this {+PART_OF_YOU}?"#,
             "\n"
         );
-        let mut map = IndexMap::new();
+        let mut map = IndexMap::default();
         map.insert(
             "CH6_THEO_ASK_DEFENSE",
             DialogEntry {
