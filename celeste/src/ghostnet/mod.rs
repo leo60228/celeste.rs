@@ -26,6 +26,8 @@ pub enum ChunkType<'a> {
     MRequest,
     MServerInfo,
     UUpdate,
+    UActionCollision,
+    UAudioPlay,
     Eof,
     HHead,
     Unknown(&'a str),
@@ -40,6 +42,8 @@ impl<'a> From<&'a str> for ChunkType<'a> {
             "nMR" => MRequest,
             "nM?" => MServerInfo,
             "nU" => UUpdate,
+            "nUaC" => UActionCollision,
+            "nUAP" => UAudioPlay,
             "\r\n" => Eof,
             "nH" => HHead,
             s => Unknown(s),
@@ -56,6 +60,8 @@ impl<'a> From<ChunkType<'a>> for &'a str {
             MRequest => "nMR",
             MServerInfo => "nM?",
             UUpdate => "nU",
+            UActionCollision => "nUaC",
+            UAudioPlay => "nUAP",
             Eof => "\r\n",
             HHead => "nH",
             Unknown(s) => s,
@@ -111,6 +117,24 @@ impl UUpdate<'_> {
 
     pub fn remainder(&self) -> &[u8] {
         &self.0[4..]
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy, From, Into)]
+pub struct UAudioPlay<'a>(&'a [u8]);
+
+impl UAudioPlay<'_> {
+    pub fn bytes(&self) -> &[u8] {
+        self.0
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy, From, Into)]
+pub struct UActionCollision<'a>(&'a [u8]);
+
+impl UActionCollision<'_> {
+    pub fn bytes(&self) -> &[u8] {
+        self.0
     }
 }
 
@@ -245,6 +269,8 @@ pub enum ChunkData<'a> {
     MRequest(MRequest<'a>),
     MServerInfo(MServerInfo<'a>),
     UUpdate(UUpdate<'a>),
+    UAudioPlay(UAudioPlay<'a>),
+    UActionCollision(UActionCollision<'a>),
     HHead(HHead),
     Eof,
     Unknown(&'a str, &'a [u8]),
@@ -260,6 +286,8 @@ impl<'a, 'b: 'a> TryFrom<&'b Chunk<'a>> for ChunkData<'a> {
             ChunkType::MRequest => MRequest::parse(&c.data)?.1.into(),
             ChunkType::MServerInfo => MServerInfo::parse(&c.data)?.1.into(),
             ChunkType::UUpdate => UUpdate::from(&c.data as &[u8]).into(),
+            ChunkType::UAudioPlay => UAudioPlay::from(&c.data as &[u8]).into(),
+            ChunkType::UActionCollision => UActionCollision::from(&c.data as &[u8]).into(),
             ChunkType::HHead => HHead::parse(&c.data)?.1.into(),
             ChunkType::Eof => ChunkData::Eof,
             ChunkType::Unknown(s) => ChunkData::Unknown(s, &c.data),
@@ -272,6 +300,14 @@ impl<'a> From<ChunkData<'a>> for Chunk<'a> {
         match d {
             ChunkData::UUpdate(uupdate) => Chunk {
                 typ: ChunkType::UUpdate,
+                data: Cow::Borrowed(uupdate.into()),
+            },
+            ChunkData::UAudioPlay(uupdate) => Chunk {
+                typ: ChunkType::UAudioPlay,
+                data: Cow::Borrowed(uupdate.into()),
+            },
+            ChunkData::UActionCollision(uupdate) => Chunk {
+                typ: ChunkType::UActionCollision,
                 data: Cow::Borrowed(uupdate.into()),
             },
             ChunkData::Eof => Chunk {
