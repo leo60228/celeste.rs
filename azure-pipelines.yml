@@ -1,14 +1,14 @@
 jobs:
-  - template: templates/tests.yml
+#  - template: templates/tests.yml
   - template: templates/tests.yml
     parameters:
       toolchain: 'beta'
   - template: templates/tests.yml
     parameters:
       toolchain: 'nightly'
-  - template: templates/tests.yml
-    parameters:
-      os: 'Windows'
+#  - template: templates/tests.yml
+#    parameters:
+#      os: 'Windows'
   - template: templates/tests.yml
     parameters:
       os: 'Windows'
@@ -17,9 +17,9 @@ jobs:
     parameters:
       os: 'Windows'
       toolchain: 'nightly'
-  - template: templates/tests.yml
-    parameters:
-      os: 'macOS'
+#  - template: templates/tests.yml
+#    parameters:
+#      os: 'macOS'
   - template: templates/tests.yml
     parameters:
       os: 'macOS'
@@ -30,4 +30,5 @@ jobs:
       toolchain: 'nightly'
   - template: templates/tests.yml
     parameters:
+      toolchain: 'beta'
       style: true

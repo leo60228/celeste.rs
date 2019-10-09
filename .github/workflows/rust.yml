@@ -8,11 +8,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+        rust: [beta, nightly]
     steps:
       - uses: actions/checkout@master
-      - name: Update Rust
-        run: rustup update
+      - uses: hecrj/setup-rust-action@v1
+        with:
+          rust-version: ${{ matrix.rust }}
       - name: Version
         run: rustup --version && cargo --version --verbose && rustc --version --verbose
       - name: Build
@@ -27,9 +29,12 @@ jobs:
   lint:
     name: lint
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@master
+      - uses: hecrj/setup-rust-action@v1
+        with:
+          rust-version: nightly
       - name: Formatting
         run: cargo fmt --all -- --check
       - name: Idioms
