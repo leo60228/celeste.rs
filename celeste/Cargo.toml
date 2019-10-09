@@ -31,10 +31,8 @@ shrinkwraprs = "0.2.1"
 derive-into-owned = "0.1.0"
 
 [dependencies.snafu]
-git = "https://github.com/CryZe/snafu.git"
-branch = "no-std"
+git = "https://github.com/shepmaster/snafu.git"
 default-features = false
-features = [ "rust_1_30" ]
 
 [dependencies.indexmap]
 git = "https://github.com/leo60228/indexmap.git"

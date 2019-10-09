@@ -23,7 +23,7 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         _ => false,
     };
 
-    for ref attr in input.attrs.iter() {
+    for attr in &input.attrs {
         match attr.parse_meta() {
             Ok(Meta::Path(path)) => {
                 let word = &path.segments.last().unwrap().ident;
@@ -61,7 +61,7 @@ pub fn binel_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 );
             }
             Ok(Meta::NameValue(kv)) => {
-                if kv.path.segments.last().unwrap().ident.to_string() == "celeste_name" {
+                if kv.path.segments.last().unwrap().ident == "celeste_name" {
                     name = match kv.lit {
                         Lit::Str(string) => string.value(),
                         _ => panic!("celeste_name must be a string!"),

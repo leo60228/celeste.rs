@@ -2,6 +2,7 @@ use heck::MixedCase;
 use quote::quote;
 use syn::*;
 
+#[allow(clippy::cognitive_complexity)]
 pub(crate) fn binel_type_struct(input: DeriveInput, name: String) -> proc_macro::TokenStream {
     let ident = input.ident;
 
@@ -26,15 +27,15 @@ pub(crate) fn binel_type_struct(input: DeriveInput, name: String) -> proc_macro:
     let mut d_opt_idents = Vec::new();
     let mut d_skip_idents = Vec::new();
 
-    for ref field in body.fields.iter() {
+    for field in &body.fields {
         let mut skip = false;
         let mut is_vec = false;
-        let ident = match &field.ident {
-            &Some(ref ident) => ident.clone(),
-            &None => panic!("Your struct is missing a field identity!"),
+        let ident = match field.ident {
+            Some(ref ident) => ident.clone(),
+            None => panic!("Your struct is missing a field identity!"),
         };
         let mut name = ident.to_string().to_mixed_case();
-        for ref attr in field.attrs.iter() {
+        for attr in &field.attrs {
             match attr.parse_meta() {
                 Ok(Meta::Path(path)) => {
                     let word = path.segments.last().unwrap().ident.to_string();
@@ -82,7 +83,7 @@ pub(crate) fn binel_type_struct(input: DeriveInput, name: String) -> proc_macro:
                 let last = path.segments.last();
 
                 if let Some(last) = last {
-                    if last.ident.to_string() == "Option" {
+                    if last.ident == "Option" {
                         is_opt = true;
                     }
 

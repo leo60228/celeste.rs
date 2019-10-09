@@ -20,8 +20,16 @@ use std::net::{IpAddr, SocketAddr};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
 
-
 type Result<'a, T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync + 'a>>; // 4
+
+type MPlayerId = ([u8; 4], MPlayer<'static>);
+type MPlayerMap = BTreeMap<u32, MPlayerId>;
+type MPlayerLock = Arc<Mutex<MPlayerMap>>;
+
+type UdpPacket = (SocketAddr, Vec<u8>);
+type UdpChannel = UnboundedSender<UdpPacket>;
+type UdpChannelMap = HashMap<IpAddr, UdpChannel>;
+type UdpMapLock = Arc<Mutex<UdpChannelMap>>;
 
 pub async fn server(addr: impl ToSocketAddrs + Clone) -> Result<'static, ()> {
     let tcp_broadcast = BroadcastChannel::<Vec<u8>>::new();
@@ -32,10 +40,8 @@ pub async fn server(addr: impl ToSocketAddrs + Clone) -> Result<'static, ()> {
 
     let udp = Arc::new(UdpSocket::bind(addr).await?);
 
-    let udp_map: Arc<Mutex<HashMap<IpAddr, UnboundedSender<(SocketAddr, Vec<u8>)>>>> =
-        Arc::new(Mutex::new(HashMap::new()));
-    let mplayers: Arc<Mutex<BTreeMap<u32, ([u8; 4], MPlayer<'static>)>>> =
-        Arc::new(Mutex::new(BTreeMap::new()));
+    let udp_map: UdpMapLock = Default::default();
+    let mplayers: MPlayerLock = Default::default();
 
     let _udp_handle = task::spawn({
         let udp_map = udp_map.clone();
@@ -112,6 +118,7 @@ pub async fn server(addr: impl ToSocketAddrs + Clone) -> Result<'static, ()> {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn handle(
     sock: TcpStream,
     udp: Arc<UdpSocket>,
@@ -120,7 +127,7 @@ pub async fn handle(
     (udp_broadcast_rx, udp_broadcast_tx): (StateReceiver<Vec<u8>>, StateSender<Vec<u8>>),
     id: u32,
     chat_id: Arc<AtomicU32>,
-    players: Arc<Mutex<BTreeMap<u32, ([u8; 4], MPlayer<'static>)>>>,
+    players: MPlayerLock,
 ) {
     println!("mpsc");
     let (_response_tx, mut response_rx) = mpsc::unbounded::<Vec<u8>>();
@@ -164,10 +171,9 @@ pub async fn handle(
                         typ: ChunkType::HHead,
                         data: Cow::Borrowed(id),
                     };
-                    let frame = Frame {
+                    Frame {
                         raw_chunks: smallvec![ChunkData::MPlayer(player.clone()).into(), head,],
-                    };
-                    frame
+                    }
                 })
                 .collect();
 
