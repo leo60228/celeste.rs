@@ -26,7 +26,7 @@ derive_more = "0.15.0"
 no-std-compat = { version = "0.2.0", features = [ "alloc" ]}
 hashbrown = "0.6.0"
 smallvec = "0.6.10"
-futures-preview = "0.3.0-alpha.18"
+futures-preview = "0.3.0-alpha.19"
 shrinkwraprs = "0.2.1"
 derive-into-owned = "0.1.0"
 
