@@ -35,8 +35,8 @@ git = "https://github.com/shepmaster/snafu.git"
 default-features = false
 
 [dependencies.indexmap]
-git = "https://github.com/leo60228/indexmap.git"
-branch = "no-std"
+git = "https://github.com/bluss/indexmap.git"
+branch = "auto-nostd"
 
 [dependencies.celeste_derive]
 version = "2.0.0-alpha.0"
