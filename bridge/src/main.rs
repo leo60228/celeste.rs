@@ -201,6 +201,7 @@ pub async fn ghostnet(
     Ok(())
 }
 
+#[allow(clippy::unreadable_literal)]
 const CHANNEL_ID: u64 = 622469967513780274;
 
 struct Handler(pub UnboundedSender<String>);
