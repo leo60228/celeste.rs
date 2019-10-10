@@ -205,12 +205,12 @@ pub struct HHead {
 }
 
 impl HHead {
-    pub fn parse<'a>(data: &'a [u8]) -> Result<'a, (&'a [u8], Self)> {
+    pub fn parse(data: &[u8]) -> Result<(&[u8], Self)> {
         Ok(map(le_u32, From::from)(data)?)
     }
 
     pub async fn write(
-        &self,
+        self,
         stream: &mut (dyn AsyncWrite + Send + Sync + Unpin),
     ) -> Result<'static, ()> {
         let id_bytes = self.id.to_le_bytes();
