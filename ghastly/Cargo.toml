@@ -8,7 +8,7 @@ license = "GPL-3.0-or-later"
 [dependencies]
 async-std = "0.99.4"
 futures-preview = { version = "0.3.0-alpha.19", features = ["async-await", "compat"] }
-slice-deque = "0.2.4"
+slice-deque = "0.3.0"
 nom = "5.0.1"
 smallvec = "0.6.10"
 futures-intrusive = "0.2.0"
