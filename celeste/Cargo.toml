@@ -36,7 +36,6 @@ default-features = false
 
 [dependencies.indexmap]
 git = "https://github.com/bluss/indexmap.git"
-branch = "auto-nostd"
 
 [dependencies.celeste_derive]
 version = "2.0.0-alpha.0"

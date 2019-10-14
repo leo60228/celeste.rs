@@ -10,12 +10,13 @@ use std::prelude::v1::*;
 mod parser;
 mod writer;
 
+type DialogIndexMap<'a> =
+    IndexMap<&'a str, DialogEntry<'a>, hashbrown::hash_map::DefaultHashBuilder>;
+
 /// A dialog file.
 #[derive(PartialEq, Eq, Debug, From, Into, Shrinkwrap)]
 #[shrinkwrap(mutable)]
-pub struct Dialog<'a>(
-    pub IndexMap<&'a str, DialogEntry<'a>, hashbrown::hash_map::DefaultHashBuilder>,
-);
+pub struct Dialog<'a>(pub DialogIndexMap<'a>);
 
 impl<'a> TryFrom<&'a str> for Dialog<'a> {
     type Error = Error<'a>;
@@ -66,13 +67,20 @@ impl<'a> Extend<(&'a str, DialogEntry<'a>)> for Dialog<'a> {
 
 impl<'a> FromIterator<DialogKey<'a>> for Dialog<'a> {
     fn from_iter<I: IntoIterator<Item = DialogKey<'a>>>(iter: I) -> Self {
-        Dialog(iter.into_iter().map(Into::into).collect())
+        let mut map: DialogIndexMap = Default::default();
+        map.extend(
+            iter.into_iter()
+                .map(<(&str, DialogEntry) as From<DialogKey>>::from),
+        );
+        Dialog(map)
     }
 }
 
 impl<'a> FromIterator<(&'a str, DialogEntry<'a>)> for Dialog<'a> {
     fn from_iter<I: IntoIterator<Item = (&'a str, DialogEntry<'a>)>>(iter: I) -> Self {
-        Dialog(iter.into_iter().collect())
+        let mut map: DialogIndexMap = Default::default();
+        map.extend(iter.into_iter());
+        Dialog(map)
     }
 }
 
@@ -127,7 +135,7 @@ impl<'a, 'b> IntoIterator for &'b Dialog<'a> {
 impl<'a> Dialog<'a> {
     /// Create an empty `Dialog`.
     pub fn new() -> Self {
-        iter::empty::<DialogKey<'a>>().collect()
+        Dialog(Default::default())
     }
 
     /// Insert a new key into the struct.

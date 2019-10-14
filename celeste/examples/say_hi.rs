@@ -4,7 +4,6 @@ use celeste::ghostnet::*;
 use futures::io::BufWriter;
 use futures::prelude::*;
 use smallvec::*;
-use std::convert::TryFrom;
 use std::env;
 use std::error::Error;
 
