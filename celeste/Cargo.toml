@@ -44,7 +44,7 @@ optional = true
 
 [dev-dependencies]
 env_logger = { version = "0.7.0", default-features = false }
-async-std = "0.99.5"
+async-std = "1.0.0"
 
 [target.'cfg(not(windows))'.dev-dependencies]
 reqwest = "0.9.19"
