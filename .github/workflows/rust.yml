@@ -18,7 +18,7 @@ jobs:
             toolchain: ${{ matrix.rust }}
             override: true
       - name: Version
-        run: rustup --version && cargo --version --verbose && rustc --version --verbose
+        run: rustup --version ; cargo --version --verbose ; rustc --version --verbose
       - name: Build
         run: cargo build --all --verbose
       - name: Run tests
