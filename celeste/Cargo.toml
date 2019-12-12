@@ -27,7 +27,7 @@ no-std-compat = { version = "0.2.0", features = [ "alloc" ]}
 hashbrown = "0.6.0"
 smallvec = "1.0.0"
 futures = "0.3.0"
-shrinkwraprs = "0.2.1"
+shrinkwraprs = "0.3.0"
 derive-into-owned = "0.1.0"
 
 [dependencies.snafu]
