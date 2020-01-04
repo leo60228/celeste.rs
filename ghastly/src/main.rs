@@ -4,9 +4,9 @@ use async_std::net::{TcpListener, TcpStream, ToSocketAddrs, UdpSocket};
 use async_std::task;
 use broadcaster::BroadcastChannel;
 use celeste::ghostnet::*;
-use futures::prelude::*;
 use futures::channel::mpsc::{self, UnboundedSender};
 use futures::lock::Mutex;
+use futures::prelude::*;
 use futures_intrusive::channel::{
     shared::{state_broadcast_channel, StateReceiver, StateSender},
     StateId,

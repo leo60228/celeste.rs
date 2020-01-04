@@ -3,8 +3,8 @@
 use async_std::net::TcpStream;
 use async_std::task;
 use celeste::ghostnet::*;
-use futures::prelude::*;
 use futures::channel::mpsc::{self, UnboundedReceiver, UnboundedSender};
+use futures::prelude::*;
 use slice_deque::SliceDeque;
 use smallvec::*;
 use std::collections::HashMap;
