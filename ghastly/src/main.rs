@@ -4,9 +4,9 @@ use async_std::net::{TcpListener, TcpStream, ToSocketAddrs, UdpSocket};
 use async_std::task;
 use broadcaster::BroadcastChannel;
 use celeste::ghostnet::*;
+use futures::prelude::*;
 use futures::channel::mpsc::{self, UnboundedSender};
 use futures::lock::Mutex;
-use futures::prelude::*;
 use futures_intrusive::channel::{
     shared::{state_broadcast_channel, StateReceiver, StateSender},
     StateId,
@@ -134,7 +134,7 @@ pub async fn handle(
     println!("clone");
     let tcp_broadcast_tx = tcp_broadcast_rx.clone();
     println!("split");
-    let (mut read, mut write) = sock.split();
+    let (mut read, mut write) = (&sock, &sock);
 
     println!("mutex");
     let udp_addr = Arc::new(Mutex::new(None));
@@ -277,7 +277,7 @@ pub async fn handle(
                                     if !welcomed {
                                         welcomed = true;
                                         player_name = Some(chunk.name.to_string());
-                                        let welcome = format!("Welcome, {}!", chunk.name);
+                                        let welcome = format!("Welcome, {}! This is alpha-quality software. Please report issues at https://discord.gg/TkzxByV.", chunk.name);
                                         println!("{}", welcome);
                                         let message = ChunkData::MChat(MChat {
                                             text: &welcome,

@@ -3,8 +3,8 @@
 use async_std::net::TcpStream;
 use async_std::task;
 use celeste::ghostnet::*;
-use futures::channel::mpsc::{self, UnboundedReceiver, UnboundedSender};
 use futures::prelude::*;
+use futures::channel::mpsc::{self, UnboundedReceiver, UnboundedSender};
 use slice_deque::SliceDeque;
 use smallvec::*;
 use std::collections::HashMap;
@@ -28,7 +28,7 @@ pub async fn ghostnet(
 
     let conn = TcpStream::connect(addr).await?;
 
-    let (mut read, write) = conn.split();
+    let (mut read, write) = (&conn, &conn);
     let mut write = BufWriter::new(write);
 
     let (response_tx, mut response_rx) = mpsc::unbounded::<Vec<u8>>();

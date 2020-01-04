@@ -4,3 +4,4 @@ Cargo.lock
 English.txt
 English.log
 English_New.txt
+.env
