@@ -4,10 +4,7 @@
 //! files, which are used to store the game's levels.
 
 #![recursion_limit = "1024"]
-#![cfg_attr(not(feature = "std"), no_std)]
 #![warn(missing_docs)]
-
-extern crate no_std_compat as std;
 
 extern crate self as celeste; // necessary for celeste_derive to work
 

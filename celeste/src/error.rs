@@ -1,13 +1,9 @@
 use snafu::Snafu;
 use std::borrow::Cow;
+use std::error::Error as StdError;
 use std::prelude::v1::*;
 use std::result::Result as StdResult;
-
-#[cfg(feature = "std")]
 use std::{io, sync::Arc};
-
-#[cfg(feature = "std")]
-use std::error::Error as StdError;
 
 /// Error type for this crate.
 #[non_exhaustive]
@@ -21,9 +17,7 @@ pub enum Error<'a> {
         /// The name of the BinEl that the library found, if it exists.
         received_name: Option<String>,
     },
-    /// An error that occurred while writing a file. Only available when the
-    /// `std` feature is enabled.
-    #[cfg(feature = "std")]
+    /// An error that occurred while writing a file.
     #[snafu(display("Error writing file: {}", source))]
     Write {
         /// This is wrapped in an Arc, as nom requires error types to implement
@@ -69,9 +63,7 @@ impl Error<'_> {
         }
     }
 
-    /// Shorthand for `Error::Write(...)`. Only availabe when the `std` feature
-    /// is enabled.
-    #[cfg(feature = "std")]
+    /// Shorthand for `Error::Write(...)`.
     pub fn io(kind: io::ErrorKind, text: impl Into<Box<dyn StdError + Send + Sync>>) -> Self {
         Error::Write {
             source: Arc::new(io::Error::new(kind, text.into())),
@@ -79,7 +71,6 @@ impl Error<'_> {
     }
 }
 
-#[cfg(feature = "std")]
 impl From<io::Error> for Error<'_> {
     fn from(source: io::Error) -> Self {
         Error::Write {

@@ -5,9 +5,7 @@ use std::prelude::v1::*;
 /// `parser` parses `BinaryElement` files.
 pub mod parser;
 
-/// `writer` writes `BinaryElement` files. Only available when the `std` feature
-/// is enabled (default).
-#[cfg(feature = "std")]
+/// `writer` writes `BinaryElement` files.
 pub mod writer;
 
 /// `serialize` serializes and deserializes `BinEl`s.

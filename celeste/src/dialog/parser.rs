@@ -120,7 +120,7 @@ where
     Ok((iter.finish()?.0, dialog))
 }
 
-#[cfg(all(test, feature = "std"))]
+#[cfg(test)]
 mod tests {
     use crate::dialog::*;
     use indexmap::map::IndexMap;
