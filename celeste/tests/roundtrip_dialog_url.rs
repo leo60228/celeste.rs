@@ -1,18 +1,14 @@
 // set CELESTE_DIALOG_URL to Celeste's English.txt
 
-#![cfg(not(windows))]
-
 use celeste::dialog::{Dialog, DialogKey, ParseExt};
 use std::env;
 use std::fmt::Write;
 
 fn get_url(url: &str) -> String {
-    let url = reqwest::Url::parse(url).unwrap();
-
-    if url.scheme() == "file" {
-        std::fs::read_to_string(url.to_file_path().unwrap()).unwrap()
+    if url.starts_with("file://") {
+        std::fs::read_to_string(&url["file://".len()..]).unwrap()
     } else {
-        reqwest::get(url).unwrap().text().unwrap()
+        attohttpc::get(url).send().unwrap().text().unwrap()
     }
 }
 

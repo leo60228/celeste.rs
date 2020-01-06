@@ -7,12 +7,10 @@ use std::result::Result as StdResult;
 use std::{io, sync::Arc};
 
 #[cfg(feature = "std")]
-use arc_io_error::IoError;
-
-#[cfg(feature = "std")]
 use std::error::Error as StdError;
 
 /// Error type for this crate.
+#[non_exhaustive]
 #[derive(Debug, Snafu, Clone)]
 pub enum Error<'a> {
     /// Received when the library is unable to parse a BinEl.
@@ -28,9 +26,9 @@ pub enum Error<'a> {
     #[cfg(feature = "std")]
     #[snafu(display("Error writing file: {}", source))]
     Write {
-        /// This is provided by the arc_io_error crate, as nom requires error
-        /// types to implement Clone.
-        source: IoError,
+        /// This is wrapped in an Arc, as nom requires error types to implement
+        /// Clone.
+        source: Arc<io::Error>,
     },
     /// This error occurs when a BinEl passed to the library has an invalid
     /// binary format.
@@ -51,8 +49,6 @@ pub enum Error<'a> {
     /// This error occurs when a file's data is incomplete.
     #[snafu(display("Incomplete data when parsing file"))]
     Incomplete,
-    #[doc(hidden)]
-    __NonExhaustive,
 }
 
 impl Error<'_> {
@@ -78,7 +74,7 @@ impl Error<'_> {
     #[cfg(feature = "std")]
     pub fn io(kind: io::ErrorKind, text: impl Into<Box<dyn StdError + Send + Sync>>) -> Self {
         Error::Write {
-            source: IoError::new(kind, Arc::from(text.into())),
+            source: Arc::new(io::Error::new(kind, text.into())),
         }
     }
 }
