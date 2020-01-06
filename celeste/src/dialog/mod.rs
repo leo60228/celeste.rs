@@ -190,7 +190,7 @@ impl DialogEntry<'_> {
         };
 
         if self.level == 0 || self.indented_str.trim_start().lines().count() <= 1 {
-            match self.indented_str.chars().nth(0) {
+            match self.indented_str.chars().next() {
                 Some('\r') => &self.indented_str[2..],
                 Some('\n') => &self.indented_str[1..],
                 _ => self.indented_str,

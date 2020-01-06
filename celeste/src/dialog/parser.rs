@@ -27,7 +27,7 @@ where
         let mut taken = 0;
         let mut rem = inp;
         'outer: loop {
-            first = rem.chars().nth(0);
+            first = rem.chars().next();
             let mut esc = false;
             while first != Some('\r') && first != Some('\n') {
                 rem = match first {
@@ -39,7 +39,7 @@ where
                     }
                     None => break 'outer,
                 };
-                first = rem.chars().nth(0);
+                first = rem.chars().next();
             }
             while first == Some('\r') || first == Some('\n') {
                 taken += match first {
@@ -48,14 +48,14 @@ where
                     _ => 0,
                 };
                 rem = &inp[taken..];
-                first = rem.chars().nth(0);
+                first = rem.chars().next();
             }
             if rem.starts_with('#') {
                 break 'outer;
             }
             let backtrack = taken;
             for _ in 0..level {
-                first = rem.chars().nth(0);
+                first = rem.chars().next();
                 rem = match first {
                     Some(c) if c == ' ' || c == '\t' => {
                         taken += c.len_utf8();

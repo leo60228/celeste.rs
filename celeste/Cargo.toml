@@ -5,8 +5,8 @@ authors = ["leo60228 <iakornfeld@gmail.com>"]
 edition = "2018"
 description = "Crate for formats from the 2018 game Celeste."
 license = "MIT OR Apache-2.0"
-homepage = "https://github.com/leo60228/celesters"
-repository = "https://github.com/leo60228/celesters"
+homepage = "https://github.com/leo60228/celeste.rs"
+repository = "https://github.com/leo60228/celeste.rs"
 
 [features]
 default = [ "derive" ]
@@ -16,8 +16,6 @@ derive = [ "celeste_derive" ]
 nom = "5.0.0"
 nom-varint = "0.2.1"
 unsigned-varint = "0.3.0"
-lazy_static = "1.3.0"
-log = "0.4.8"
 byteorder = "1.3.2"
 itertools = "0.8.0"
 derive_more = "0.99.0"
@@ -35,9 +33,8 @@ path = "../celeste_derive"
 optional = true
 
 [dev-dependencies]
-env_logger = { version = "0.7.0", default-features = false }
 async-std = "1.0.1"
-attohttpc = { version = "0.9.0", default-features = false }
+attohttpc = "0.9.0"
 
 [[example]]
 name = "roundtrip"

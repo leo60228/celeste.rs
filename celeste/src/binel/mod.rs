@@ -1,5 +1,4 @@
 use hashbrown::HashMap;
-use lazy_static::lazy_static;
 use std::prelude::v1::*;
 
 /// `parser` parses `BinaryElement` files.
@@ -39,10 +38,6 @@ pub struct BinEl {
     /// All attributes of the `BinEl`. Unlike XML, these are strongly typed.
     pub attributes: HashMap<String, BinElAttr>,
     children: HashMap<String, Vec<BinEl>>,
-}
-
-lazy_static! {
-    static ref CHILDLESS_BINEL_VEC: Vec<BinEl> = vec![];
 }
 
 impl BinEl {
@@ -102,6 +97,7 @@ impl BinEl {
     /// Get children of the `BinEl` by name.
     #[inline]
     pub fn get(&self, name: &str) -> &Vec<Self> {
+        static CHILDLESS_BINEL_VEC: Vec<BinEl> = Vec::new();
         self.children.get(name).unwrap_or(&CHILDLESS_BINEL_VEC)
     }
 

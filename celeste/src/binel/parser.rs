@@ -1,5 +1,4 @@
 use super::*;
-use log::*;
 use nom::branch::alt;
 use nom::bytes::complete::*;
 use nom::combinator::map;
@@ -122,13 +121,10 @@ where
     E: ParseError<&'a [u8]>,
 {
     move |buf| {
-        debug!("taking element");
         let mut buf = buf;
 
-        debug!("taking name");
         let (lookup_buf, name) = take_lookup(&lookup)(buf)?;
         buf = lookup_buf;
-        debug!("name is {}", name);
 
         let mut binel = BinEl::new(&name);
 
@@ -136,24 +132,18 @@ where
         buf = attr_count_buf;
 
         for _ in 0..attr_count {
-            debug!("taking key");
             let (key_buf, key) = take_lookup(&lookup)(buf)?;
-            debug!("key is {}", key);
-            debug!("taking value");
             let (val_buf, val) = take_elemattr(&lookup)(key_buf)?;
             buf = val_buf;
             binel.attributes.insert(key.clone(), val);
         }
 
         let (mut buf, child_count) = le_u16(buf)?;
-        debug!("{} children", child_count);
         for _ in 0..child_count {
             let (child_buf, child) = take_element(lookup)(buf)?;
             buf = child_buf;
             binel.insert(child);
         }
-
-        debug!("got element");
 
         Ok((buf, binel))
     }
