@@ -248,11 +248,8 @@ fn main() {
     futures::executor::block_on(async move {
         loop {
             let msg = ghostnet_rx.next().await.unwrap();
-            let safe_msg = serenity::utils::content_safe(
-                http.cache.clone(),
-                &msg,
-                &Default::default(),
-            );
+            let safe_msg =
+                serenity::utils::content_safe(http.cache.clone(), &msg, &Default::default());
             channel.read().say(&http.http, safe_msg).unwrap();
         }
     });
