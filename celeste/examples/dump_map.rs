@@ -4,8 +4,6 @@ use celeste::{
 };
 
 fn main() {
-    env_logger::init();
-
     let map_bytes = include_bytes!("empty.bin");
     let map_bin = parser::take_file::<Error>(map_bytes).unwrap().1;
     println!("{:#?}", map_bin); // pretty print
