@@ -1,6 +1,5 @@
 /target
 **/*.rs.bk
-Cargo.lock
 English.txt
 English.log
 English_New.txt
