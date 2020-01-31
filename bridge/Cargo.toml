@@ -12,7 +12,7 @@ slice-deque = "0.3.0"
 nom = "5.0.1"
 smallvec = "1.0.0"
 futures-intrusive = "0.3.0"
-serenity = "0.7.0"
+serenity = "0.8.0"
 
 [dependencies.futures01]
 package = "futures"
