@@ -249,7 +249,7 @@ fn main() {
         loop {
             let msg = ghostnet_rx.next().await.unwrap();
             let safe_msg = serenity::utils::content_safe(
-                CacheRwLock::from(http.cache.clone()),
+                http.cache.clone(),
                 &msg,
                 &Default::default(),
             );
