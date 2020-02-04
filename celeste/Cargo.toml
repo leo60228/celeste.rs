@@ -33,7 +33,7 @@ path = "../celeste_derive"
 optional = true
 
 [dev-dependencies]
-async-std = "1.0.1"
+async-std = "1.5.0"
 attohttpc = "0.11.1"
 
 [[example]]
