@@ -25,7 +25,7 @@ futures = "0.3.3"
 shrinkwraprs = "0.3.0"
 derive-into-owned = "0.1.0"
 snafu = "0.6.0"
-indexmap = "1.3.0"
+indexmap = "1.3.2"
 
 [dependencies.celeste_derive]
 version = "2.0.0-alpha.0"
