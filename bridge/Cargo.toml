@@ -7,7 +7,7 @@ license = "GPL-3.0-or-later"
 
 [dependencies]
 async-std = "1.5.0"
-futures = "0.3.2"
+futures = "0.3.3"
 slice-deque = "0.3.0"
 nom = "5.0.1"
 smallvec = "1.0.0"
