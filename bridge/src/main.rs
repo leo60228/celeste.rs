@@ -162,8 +162,7 @@ pub async fn ghostnet(
                     buf.extend(std::iter::repeat(0).take(start + 128 - buf.len()));
                     eprintln!("reading");
                     let read = read.read(&mut buf[start..]).await?;
-                    start += read;
-                    /*if read != 0 {
+                    if read != 0 {
                         start += read;
                     } else {
                         return Result::Err(
@@ -173,7 +172,7 @@ pub async fn ghostnet(
                             )
                             .into(),
                         );
-                    }*/
+                    }
                     continue;
                 }
                 Err(_) => {
