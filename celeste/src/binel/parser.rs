@@ -1,14 +1,33 @@
 use super::*;
 use nom::branch::alt;
 use nom::bytes::complete::*;
-use nom::combinator::map;
-use nom::multi::count;
+use nom::combinator::{map, map_res};
+use nom::multi::{count, length_data};
 use nom::number::complete::*;
 use nom::sequence::preceded;
-use nom::{error::ParseError, take_str, IResult};
+use nom::{error::ParseError, IResult};
 use nom_varint::take_varint;
+use std::str::from_utf8;
 
-/// Take a string with the length being a varint.
+/// Take a borrowed string with the length being a varint.
+///
+/// # Examples:
+/// ```
+/// use celeste::binel::parser::take_str;
+/// use celeste::Error;
+///
+/// let header = b"\x0bCELESTE MAP";
+///
+/// assert_eq!(take_str::<Error>(&header[..]).unwrap(), (&b""[..], "CELESTE MAP"));
+/// ```
+pub fn take_str<'a, E>(buf: &'a [u8]) -> IResult<&'a [u8], &'a str, E>
+where
+    E: ParseError<&'a [u8]>,
+{
+    map_res(length_data(take_varint), from_utf8)(buf)
+}
+
+/// Take an owned string with the length being a varint.
 ///
 /// # Examples:
 /// ```
@@ -23,18 +42,7 @@ pub fn take_string<'a, E>(buf: &'a [u8]) -> IResult<&'a [u8], String, E>
 where
     E: ParseError<&'a [u8]>,
 {
-    let (buf, length) = match take_varint(buf) {
-        Ok(res) => res,
-        Err(nom::Err::Error((buf, kind))) => {
-            return Err(nom::Err::Error(E::from_error_kind(buf, kind)))
-        }
-        Err(nom::Err::Failure((buf, kind))) => {
-            return Err(nom::Err::Failure(E::from_error_kind(buf, kind)))
-        }
-        Err(nom::Err::Incomplete(needed)) => return Err(nom::Err::Incomplete(needed)),
-    };
-    let (buf, string) = take_str!(buf, length)?;
-    Ok((buf, string.to_string()))
+    map(take_str, String::from)(buf)
 }
 
 /// Lookup a u16 from a `&[u8]` in a string lookup table.
