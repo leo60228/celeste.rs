@@ -14,7 +14,7 @@ use std::convert::TryFrom;
 use futures::io::BufWriter;
 use std::env;
 
-use serenity::{cache::CacheRwLock, model::channel::Message, prelude::*};
+use serenity::{model::channel::Message, prelude::*};
 
 type Result<'a, T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync + 'a>>; // 4
 
