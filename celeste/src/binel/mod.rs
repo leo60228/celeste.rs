@@ -106,7 +106,7 @@ impl BinEl {
     pub fn get_mut(&mut self, name: &str) -> &mut Vec<Self> {
         self.children
             .entry(name.to_string())
-            .or_insert_with(|| vec![])
+            .or_insert_with(Vec::new)
     }
 
     /// Drain all children of the `BinEl`.
