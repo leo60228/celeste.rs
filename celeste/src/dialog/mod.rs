@@ -22,7 +22,7 @@ impl<'a> TryFrom<&'a str> for Dialog<'a> {
     type Error = Error<'a>;
 
     fn try_from(s: &'a str) -> Result<Self> {
-        Ok(parser::parse_entries(s)?.1)
+        Ok(parser::parse(s)?)
     }
 }
 

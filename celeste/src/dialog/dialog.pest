@@ -1,0 +1,15 @@
+key = { XID_CONTINUE+ }
+
+comment = { "#" ~ (!(NEWLINE) ~ ANY)* }
+comments = _{ (comment ~ NEWLINE+)* }
+line_break = _{ (NEWLINE ~ comments)+ }
+
+indentation = _{ (" " | "\t")+ }
+indent_level = { indentation? }
+cont = _{ PEEK_ALL ~ indentation }
+value_line = _{ (!(line_break) ~ ANY)* }
+value = { value_line ~ (line_break ~ cont ~ value_line)* }
+
+entry = { PUSH(indent_level) ~ key ~ WHITE_SPACE* ~ "=" ~ WHITE_SPACE* ~ value ~ DROP }
+
+file = { FORMAT* ~ comments ~ entry ~ (line_break ~ entry)* ~ WHITE_SPACE* }
