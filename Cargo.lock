@@ -1068,9 +1068,9 @@ dependencies = [
 
 [[package]]
 name = "nom-varint"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "443eb2256c203543d9f75ac83d7912441b8873663e1c03ddf3f6f1640f81df54"
+checksum = "80bee8eb7f906512bf5ecbb49d006872cd911bd6c580c9e4d3e5f44ca0de7c86"
 dependencies = [
  "nom 5.1.1",
 ]
