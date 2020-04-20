@@ -1,7 +1,7 @@
 use super::*;
 use nom::branch::alt;
 use nom::bytes::complete::*;
-use nom::combinator::{map, map_res};
+use nom::combinator::{map, map_opt, map_res};
 use nom::multi::{count, length_data};
 use nom::number::complete::*;
 use nom::sequence::preceded;
@@ -52,7 +52,7 @@ pub fn take_lookup<'a: 'b, 'b, E: 'b>(
 where
     E: ParseError<&'a [u8]>,
 {
-    map(le_u16, move |index| &lookup[index as usize])
+    map_opt(le_u16, move |index| lookup.get(index as usize))
 }
 
 /// Take a single character from a Celeste RLE-encoded string in a `&[u8]`.
@@ -163,7 +163,10 @@ pub fn take_file<'a, E>(buf: &'a [u8]) -> IResult<&'a [u8], BinFile, E>
 where
     E: ParseError<&'a [u8]>,
 {
+    #[cfg(not(fuzzing))]
     let (buf, _) = tag(b"\x0bCELESTE MAP")(buf)?;
+    #[cfg(fuzzing)]
+    let (buf, _) = take_string(buf)?;
     let (buf, package) = take_string(buf)?;
     let (buf, length) = le_i16(buf)?;
     let (buf, lookup) = count(take_string, length as usize)(buf)?;

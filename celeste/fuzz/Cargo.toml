@@ -1,0 +1,29 @@
+
+[package]
+name = "celeste-fuzz"
+version = "0.0.0"
+authors = ["Automatically generated"]
+publish = false
+edition = "2018"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.3"
+nom = "5.0"
+
+[dependencies.celeste]
+path = ".."
+
+# Prevent this from interfering with workspaces
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "binel"
+path = "fuzz_targets/binel.rs"
+
+[[bin]]
+name = "ghostnet"
+path = "fuzz_targets/ghostnet.rs"
