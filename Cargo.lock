@@ -520,9 +520,9 @@ dependencies = [
 
 [[package]]
 name = "futures-intrusive"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e9182c022da684d168ed91d214efce5ceaab36882b42b53bf2c887fac54d118b"
+checksum = "bc1529d07bd55fa54fc6c2d8460f621cfde0ae3fd2b96b2fa7eb4883478e1703"
 dependencies = [
  "futures-core",
  "lock_api",
