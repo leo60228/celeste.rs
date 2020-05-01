@@ -13,7 +13,7 @@ proc-macro = true
 
 [dependencies]
 syn = "1.0.18"
-quote = "1.0.3"
+quote = "1.0.4"
 heck = "0.3.1"
 
 [dev-dependencies.celeste]
