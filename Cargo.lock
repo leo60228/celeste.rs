@@ -139,7 +139,7 @@ dependencies = [
  "futures 0.1.29",
  "futures 0.3.5",
  "futures-intrusive",
- "nom 5.1.1",
+ "nom 5.1.2",
  "serenity",
  "slice-deque",
  "smallvec 1.4.0",
@@ -222,7 +222,7 @@ dependencies = [
  "hashbrown",
  "indexmap",
  "itertools 0.9.0",
- "nom 5.1.1",
+ "nom 5.1.2",
  "nom-varint",
  "pest",
  "pest_derive",
@@ -618,7 +618,7 @@ dependencies = [
  "futures 0.1.29",
  "futures 0.3.5",
  "futures-intrusive",
- "nom 5.1.1",
+ "nom 5.1.2",
  "slice-deque",
  "smallvec 1.4.0",
 ]
@@ -1038,9 +1038,9 @@ dependencies = [
 
 [[package]]
 name = "nom"
-version = "5.1.1"
+version = "5.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b471253da97532da4b61552249c521e01e736071f71c1a4f7ebbfbf0a06aad6"
+checksum = "ffb4262d26ed83a1c0a33a38fe2bb15797329c85770da05e6b828ddb782627af"
 dependencies = [
  "lexical-core",
  "memchr",
@@ -1053,7 +1053,7 @@ version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "80bee8eb7f906512bf5ecbb49d006872cd911bd6c580c9e4d3e5f44ca0de7c86"
 dependencies = [
- "nom 5.1.1",
+ "nom 5.1.2",
 ]
 
 [[package]]
