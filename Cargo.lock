@@ -8,9 +8,9 @@ checksum = "5d2e7343e7fc9de883d1b0341e0b13970f764c14101234857d2ddafa1cb1cac2"
 
 [[package]]
 name = "ahash"
-version = "0.3.2"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0989268a37e128d4d7a8028f1c60099430113fdbc70419010601ce51a228e4fe"
+checksum = "6d66721683190aeea775c737eee925aea24719058d86d815e8ee121dd9f37d19"
 
 [[package]]
 name = "anyhow"
@@ -224,7 +224,7 @@ dependencies = [
  "derive-into-owned",
  "derive_more",
  "futures 0.3.5",
- "hashbrown",
+ "hashbrown 0.9.0",
  "indexmap",
  "itertools 0.9.0",
  "nom 5.1.2",
@@ -687,8 +687,16 @@ version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e91b62f79061a0bc2e046024cb7ba44b08419ed238ecbd9adbd787434b9e8c25"
 dependencies = [
- "ahash",
  "autocfg 1.0.0",
+]
+
+[[package]]
+name = "hashbrown"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "00d63df3d41950fb462ed38308eea019113ad1508da725bbedcd0fa5a85ef5f7"
+dependencies = [
+ "ahash",
 ]
 
 [[package]]
@@ -795,7 +803,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4e47a3566dd4fd4eec714ae6ceabdee0caec795be835c223d92c2d40f1e8cf1c"
 dependencies = [
  "autocfg 1.0.0",
- "hashbrown",
+ "hashbrown 0.8.2",
 ]
 
 [[package]]
