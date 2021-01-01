@@ -28,9 +28,23 @@ jobs:
         env:
           CELESTE_DIALOG_URL: ${{ secrets.CELESTE_DIALOG_URL }} # password protected
         run: cargo test --all --verbose -- --ignored
+  should-lint:
+    name: lint check
+    runs-on: ubuntu-latest
+
+    outputs:
+      user-type: ${{ steps.check.outputs.user-type }}
+
+    steps:
+      - id: check
+        run: echo "::set-output name=user-type::$(jq -r '.pull_request.user.type' "$GITHUB_EVENT_PATH")"
+
   lint:
     name: lint
     runs-on: ubuntu-latest
+
+    needs: should-lint
+    if: needs.should-lint.outputs.user-type != 'Bot'
 
     steps:
       - uses: actions/checkout@master
