@@ -549,13 +549,13 @@ dependencies = [
 
 [[package]]
 name = "futures-intrusive"
-version = "0.3.1"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc1529d07bd55fa54fc6c2d8460f621cfde0ae3fd2b96b2fa7eb4883478e1703"
+checksum = "62007592ac46aa7c2b6416f7deb9a8a8f63a01e0f1d6e1787d5630170db2b63e"
 dependencies = [
  "futures-core",
- "lock_api 0.3.3",
- "parking_lot 0.10.0",
+ "lock_api 0.4.1",
+ "parking_lot 0.11.0",
 ]
 
 [[package]]
