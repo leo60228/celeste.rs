@@ -36,7 +36,7 @@ optional = true
 
 [dev-dependencies]
 async-std = "1.5.0"
-attohttpc = "0.15.0"
+attohttpc = "0.16.3"
 
 [[example]]
 name = "roundtrip"
